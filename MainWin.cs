@@ -88,7 +88,7 @@ namespace NovelpiaDownloader
                             {
                                 file.Write(resp);
                             }
-                            chapterNames.Add(new string[] { chapter.Groups[2].Value, jsonPath });
+                            chapterNames.Add(new string[] { HttpUtility.HtmlEncode(chapter.Groups[2].Value), jsonPath });
                             Invoke(new Action(() => ConsoleBox.AppendText(chapter.Groups[2].Value + "\r\n")));
                         }
                         else
