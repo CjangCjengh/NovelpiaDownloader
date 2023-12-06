@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Script.Serialization;
@@ -70,7 +71,8 @@ namespace NovelpiaDownloader
                 int chapterNo = 0;
                 int page = 0;
                 var chapterIds = new List<string>();
-                var chapterNames = new List<string[]>();
+                var chapterNames = new List<(string, string)>();
+                List<Thread> threads = new List<Thread>();
                 while (true)
                 {
                     string data = $"novel_no={novelNo}&sort=DOWN&page={page}";
@@ -80,26 +82,20 @@ namespace NovelpiaDownloader
                         break;
                     foreach (Match chapter in chapters)
                     {
-                        resp = PostRequest($"https://novelpia.com/proc/viewer_data/{chapter.Groups[1].Value}", novelpia.loginkey);
-                        if (resp != "" && !resp.Contains("본인인증"))
-                        {
-                            string jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
-                            using (var file = new StreamWriter(jsonPath, false))
-                            {
-                                file.Write(resp);
-                            }
-                            chapterNames.Add(new string[] { HttpUtility.HtmlEncode(chapter.Groups[2].Value), jsonPath });
-                            Invoke(new Action(() => ConsoleBox.AppendText(chapter.Groups[2].Value + "\r\n")));
-                        }
-                        else
-                        {
-                            Invoke(new Action(() => ConsoleBox.AppendText(chapter.Groups[2].Value + " ERROR!\r\n")));
-                        }
+                        string chapterId = chapter.Groups[1].Value;
+                        string chapterName = chapter.Groups[2].Value;
+                        string jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
+                        Thread thread = new Thread(() => DownloadChapter(chapterId, chapterName, jsonPath));
+                        thread.Start();
+                        threads.Add(thread);
+                        chapterNames.Add((HttpUtility.HtmlEncode(chapterName), jsonPath));
+                        chapterIds.Add(chapterId);
                         chapterNo++;
-                        chapterIds.Add(chapter.Groups[1].Value);
                     }
                     page++;
                 }
+                threads.ForEach(t => t.Join());
+                threads.Clear();
                 if (saveAsEpub)
                 {
                     Directory.CreateDirectory(Path.Combine(directory, "META-INF"));
@@ -127,14 +123,25 @@ namespace NovelpiaDownloader
 
                     var match = Regex.Match(responseText, @"productName = '(.+?)';");
                     string title = match.Groups[1].Value;
-                    match = Regex.Match(responseText, @"href='(//image\.novelpia\.com/imagebox/cover/.+?\.file)'");
+                    match = Regex.Match(responseText, @"href=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
                     string url = match.Groups[1].Value;
-                    Invoke(new Action(() => ConsoleBox.AppendText("커버 다운로드 시작\r\n{url}\r\n")));
-                    using (var downloader = new WebClient())
+                    if (string.IsNullOrEmpty(url))
                     {
-                        downloader.DownloadFile("https:" + url, Path.Combine(directory, "OEBPS/Images/cover.jpg"));
+                        match = Regex.Match(responseText, @"src=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
+                        url = match.Groups[1].Value;
                     }
-                    Invoke(new Action(() => ConsoleBox.AppendText($"커버 다운로드 완료\r\n")));
+
+                    Thread thread = new Thread(() =>
+                    {
+                        Invoke(new Action(() => ConsoleBox.AppendText($"커버 다운로드 시작\r\n{url}\r\n")));
+                        using (var downloader = new WebClient())
+                        {
+                            downloader.DownloadFile("https:" + url, Path.Combine(directory, "OEBPS/Images/cover.jpg"));
+                        }
+                        Invoke(new Action(() => ConsoleBox.AppendText($"커버 다운로드 완료\r\n")));
+                    });
+                    thread.Start();
+                    threads.Add(thread);
 
                     using (var file = new StreamWriter(Path.Combine(directory, "OEBPS/toc.ncx"), false))
                     {
@@ -144,9 +151,9 @@ namespace NovelpiaDownloader
                         {
                             file.Write($"<navPoint id=\"navPoint-{i + 1}\" playOrder=\"{i + 1}\">\n" +
                                 "<navLabel>\n" +
-                                $"<text>{chapterNames[i][0]}</text>\n" +
+                                $"<text>{chapterNames[i].Item1}</text>\n" +
                                 "</navLabel>\n" +
-                                $"<content src=\"Text/chapter{Path.ChangeExtension(Path.GetFileName(chapterNames[i][1]), "html")}\" />\n" +
+                                $"<content src=\"Text/chapter{Path.ChangeExtension(Path.GetFileName(chapterNames[i].Item2), "html")}\" />\n" +
                                 "</navPoint>\n");
                         }
                         file.Write("</navMap>\n</ncx>\n");
@@ -157,13 +164,15 @@ namespace NovelpiaDownloader
                         file.Write(EpubTemplate.cover);
                     chapterNames.ForEach(s =>
                     {
-                        string temp = Path.ChangeExtension(Path.GetFileName(s[1]), "html");
+                        if (!File.Exists(s.Item2))
+                            return;
+                        string temp = Path.ChangeExtension(Path.GetFileName(s.Item2), "html");
                         using (var file = new StreamWriter(Path.Combine(directory, $"OEBPS/Text/chapter{temp}"), false))
                         {
                             file.Write(EpubTemplate.chapter);
-                            file.Write($"<h1>{s[0]}</h1>\n<p>&nbsp;</p>\n");
+                            file.Write($"<h1>{s.Item1}</h1>\n<p>&nbsp;</p>\n");
                             var serializer = new JavaScriptSerializer();
-                            using (var reader = new StreamReader(s[1], Encoding.UTF8))
+                            using (var reader = new StreamReader(s.Item2, Encoding.UTF8))
                             {
                                 var texts = serializer.Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
                                 foreach (var text in (ArrayList)texts["s"])
@@ -176,12 +185,19 @@ namespace NovelpiaDownloader
                                         if (!textStr.Contains("cover-wrapper"))
                                         {
                                             url = match.Groups[1].Value;
-                                            Invoke(new Action(() => ConsoleBox.AppendText("삽화 다운로드 시작\r\n{url}\r\n")));
-                                            using (var downloader = new WebClient())
+
+                                            Thread imgThread = new Thread(() =>
                                             {
-                                                downloader.DownloadFile("https:" + url, Path.Combine(directory, $"OEBPS/Images/{imageNo}.jpg"));
-                                            }
-                                            Invoke(new Action(() => ConsoleBox.AppendText($"삽화 다운로드 완료\r\n")));
+                                                Invoke(new Action(() => ConsoleBox.AppendText($"삽화 다운로드 시작\r\n{url}\r\n")));
+                                                using (var downloader = new WebClient())
+                                                {
+                                                    downloader.DownloadFile("https:" + url, Path.Combine(directory, $"OEBPS/Images/{imageNo}.jpg"));
+                                                }
+                                                Invoke(new Action(() => ConsoleBox.AppendText($"삽화 다운로드 완료\r\n")));
+                                            });
+                                            imgThread.Start();
+                                            threads.Add(imgThread);
+
                                             textStr = Regex.Replace(textStr, @"<img.+?src=\"".+?\"".+?>",
                                                 $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.jpg\" width=\"100%\"/>");
                                             file.Write($"<p>{textStr}</p>\n");
@@ -197,7 +213,7 @@ namespace NovelpiaDownloader
                             }
                             file.Write("</body>\n</html>\n");
                         }
-                        File.Delete(s[1]);
+                        File.Delete(s.Item2);
                     });
 
                     using (var file = new StreamWriter(Path.Combine(directory, "OEBPS/content.opf"), false))
@@ -207,7 +223,7 @@ namespace NovelpiaDownloader
                         file.Write(EpubTemplate.content2);
                         for (int i = 0; i < chapterNames.Count; i++)
                         {
-                            string temp = Path.ChangeExtension(Path.GetFileName(chapterNames[i][1]), "html");
+                            string temp = Path.ChangeExtension(Path.GetFileName(chapterNames[i].Item2), "html");
                             file.Write($"<item id=\"chapter{temp}\" href=\"Text/chapter{temp}\" media-type=\"application/xhtml+xml\"/>\n");
                         }
                         for (int i = 1; i < imageNo; i++)
@@ -217,7 +233,7 @@ namespace NovelpiaDownloader
                         file.Write("</manifest>\n<spine toc=\"ncx\">\n<itemref idref=\"cover.html\"/>\n");
                         for (int i = 0; i < chapterNames.Count; i++)
                         {
-                            string temp = Path.ChangeExtension(Path.GetFileName(chapterNames[i][1]), "html");
+                            string temp = Path.ChangeExtension(Path.GetFileName(chapterNames[i].Item2), "html");
                             file.Write($"<itemref idref=\"chapter{temp}\"/>\n");
                         }
                         file.Write("</spine>\n<guide>\n" +
@@ -228,6 +244,8 @@ namespace NovelpiaDownloader
                     if (File.Exists(path))
                         File.Delete(path);
 
+                    threads.ForEach(t => t.Join());
+
                     ZipFile.CreateFromDirectory(directory, path);
                 }
                 else
@@ -237,8 +255,10 @@ namespace NovelpiaDownloader
                         var serializer = new JavaScriptSerializer();
                         chapterNames.ForEach(s =>
                         {
-                            file.Write($"{s[0]}\n\n");
-                            using (var reader = new StreamReader(s[1], Encoding.UTF8))
+                            file.Write($"{s.Item1}\n\n");
+                            if (!File.Exists(s.Item2))
+                                return;
+                            using (var reader = new StreamReader(s.Item2, Encoding.UTF8))
                             {
                                 var texts = serializer.Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
                                 foreach (var text in (ArrayList)texts["s"])
@@ -254,13 +274,30 @@ namespace NovelpiaDownloader
                                 }
                             }
                             file.Write("\n");
-                            File.Delete(s[1]);
+                            File.Delete(s.Item2);
                         });
                     }
                 }
                 Directory.Delete(directory, true);
                 Invoke(new Action(() => ConsoleBox.AppendText("다운로드 완료!\r\n")));
             });
+        }
+
+        private void DownloadChapter(string chapterId, string chapterName, string jsonPath)
+        {
+            string resp = PostRequest($"https://novelpia.com/proc/viewer_data/{chapterId}", novelpia.loginkey);
+            if (resp != "" && !resp.Contains("본인인증"))
+            {
+                using (var file = new StreamWriter(jsonPath, false))
+                {
+                    file.Write(resp);
+                }
+                Invoke(new Action(() => ConsoleBox.AppendText(chapterName + "\r\n")));
+            }
+            else
+            {
+                Invoke(new Action(() => ConsoleBox.AppendText(chapterName + " ERROR!\r\n")));
+            }
         }
 
         private static string PostRequest(string url, string loginkey, string data = null)
