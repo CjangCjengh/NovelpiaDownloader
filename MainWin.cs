@@ -85,17 +85,17 @@ namespace NovelpiaDownloader
                         string chapterId = chapter.Groups[1].Value;
                         string chapterName = chapter.Groups[2].Value;
                         string jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
-                        Thread thread = new Thread(() => DownloadChapter(chapterId, chapterName, jsonPath));
-                        thread.Start();
-                        threads.Add(thread);
+                        threads.Add(new Thread(() => DownloadChapter(chapterId, chapterName, jsonPath)));
                         chapterNames.Add((HttpUtility.HtmlEncode(chapterName), jsonPath));
                         chapterIds.Add(chapterId);
                         chapterNo++;
                     }
                     page++;
                 }
-                threads.ForEach(t => t.Join());
+
+                ExecuteThreads(threads, (int)ThreadNum.Value);
                 threads.Clear();
+
                 if (saveAsEpub)
                 {
                     Directory.CreateDirectory(Path.Combine(directory, "META-INF"));
@@ -131,7 +131,7 @@ namespace NovelpiaDownloader
                         url = match.Groups[1].Value;
                     }
 
-                    Thread thread = new Thread(() =>
+                    threads.Add(new Thread(() =>
                     {
                         Invoke(new Action(() => ConsoleBox.AppendText($"커버 다운로드 시작\r\n{url}\r\n")));
                         using (var downloader = new WebClient())
@@ -139,9 +139,7 @@ namespace NovelpiaDownloader
                             downloader.DownloadFile("https:" + url, Path.Combine(directory, "OEBPS/Images/cover.jpg"));
                         }
                         Invoke(new Action(() => ConsoleBox.AppendText($"커버 다운로드 완료\r\n")));
-                    });
-                    thread.Start();
-                    threads.Add(thread);
+                    }));
 
                     using (var file = new StreamWriter(Path.Combine(directory, "OEBPS/toc.ncx"), false))
                     {
@@ -186,7 +184,7 @@ namespace NovelpiaDownloader
                                         {
                                             url = match.Groups[1].Value;
 
-                                            Thread imgThread = new Thread(() =>
+                                            threads.Add(new Thread(() =>
                                             {
                                                 Invoke(new Action(() => ConsoleBox.AppendText($"삽화 다운로드 시작\r\n{url}\r\n")));
                                                 using (var downloader = new WebClient())
@@ -194,9 +192,7 @@ namespace NovelpiaDownloader
                                                     downloader.DownloadFile("https:" + url, Path.Combine(directory, $"OEBPS/Images/{imageNo}.jpg"));
                                                 }
                                                 Invoke(new Action(() => ConsoleBox.AppendText($"삽화 다운로드 완료\r\n")));
-                                            });
-                                            imgThread.Start();
-                                            threads.Add(imgThread);
+                                            }));
 
                                             textStr = Regex.Replace(textStr, @"<img.+?src=\"".+?\"".+?>",
                                                 $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.jpg\" width=\"100%\"/>");
@@ -244,7 +240,7 @@ namespace NovelpiaDownloader
                     if (File.Exists(path))
                         File.Delete(path);
 
-                    threads.ForEach(t => t.Join());
+                    ExecuteThreads(threads, (int)ThreadNum.Value);
 
                     ZipFile.CreateFromDirectory(directory, path);
                 }
@@ -297,6 +293,19 @@ namespace NovelpiaDownloader
             else
             {
                 Invoke(new Action(() => ConsoleBox.AppendText(chapterName + " ERROR!\r\n")));
+            }
+        }
+
+        private void ExecuteThreads(List<Thread> threads, int batch_size)
+        {
+            for (int i = 0; i < threads.Count; i += batch_size)
+            {
+                int remain = threads.Count - i;
+                int limit = batch_size < remain ? batch_size : remain;
+                for (int j = 0; j < limit; j++)
+                    threads[i + j].Start();
+                for (int j = 0; j < limit; j++)
+                    threads[i + j].Join();
             }
         }
 

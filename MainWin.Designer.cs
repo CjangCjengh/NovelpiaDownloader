@@ -30,24 +30,27 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
             this.LoginGroup = new System.Windows.Forms.GroupBox();
-            this.EmailLabel = new System.Windows.Forms.Label();
-            this.PasswordLabel = new System.Windows.Forms.Label();
-            this.LoginkeyLabel = new System.Windows.Forms.Label();
-            this.EmailText = new System.Windows.Forms.TextBox();
-            this.PasswordText = new System.Windows.Forms.TextBox();
-            this.LoginkeyText = new System.Windows.Forms.TextBox();
-            this.LoginButton1 = new System.Windows.Forms.Button();
             this.LoginButton2 = new System.Windows.Forms.Button();
+            this.LoginButton1 = new System.Windows.Forms.Button();
+            this.LoginkeyText = new System.Windows.Forms.TextBox();
+            this.PasswordText = new System.Windows.Forms.TextBox();
+            this.EmailText = new System.Windows.Forms.TextBox();
+            this.LoginkeyLabel = new System.Windows.Forms.Label();
+            this.PasswordLabel = new System.Windows.Forms.Label();
+            this.EmailLabel = new System.Windows.Forms.Label();
             this.DownloadGroup = new System.Windows.Forms.GroupBox();
-            this.NovelNoLable = new System.Windows.Forms.Label();
-            this.ExtensionLabel = new System.Windows.Forms.Label();
-            this.NovelNoText = new System.Windows.Forms.TextBox();
-            this.EpubButton = new System.Windows.Forms.RadioButton();
-            this.TxtButton = new System.Windows.Forms.RadioButton();
             this.DownloadButton = new System.Windows.Forms.Button();
+            this.TxtButton = new System.Windows.Forms.RadioButton();
+            this.EpubButton = new System.Windows.Forms.RadioButton();
+            this.NovelNoText = new System.Windows.Forms.TextBox();
+            this.ExtensionLabel = new System.Windows.Forms.Label();
+            this.NovelNoLable = new System.Windows.Forms.Label();
             this.ConsoleBox = new System.Windows.Forms.TextBox();
+            this.ThreadLabel = new System.Windows.Forms.Label();
+            this.ThreadNum = new System.Windows.Forms.NumericUpDown();
             this.LoginGroup.SuspendLayout();
             this.DownloadGroup.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).BeginInit();
             this.SuspendLayout();
             // 
             // LoginGroup
@@ -67,53 +70,15 @@
             this.LoginGroup.TabStop = false;
             this.LoginGroup.Text = "로그인";
             // 
-            // EmailLabel
+            // LoginButton2
             // 
-            this.EmailLabel.AutoSize = true;
-            this.EmailLabel.Location = new System.Drawing.Point(21, 33);
-            this.EmailLabel.Name = "EmailLabel";
-            this.EmailLabel.Size = new System.Drawing.Size(66, 25);
-            this.EmailLabel.TabIndex = 0;
-            this.EmailLabel.Text = "이메일";
-            // 
-            // PasswordLabel
-            // 
-            this.PasswordLabel.AutoSize = true;
-            this.PasswordLabel.Location = new System.Drawing.Point(12, 70);
-            this.PasswordLabel.Name = "PasswordLabel";
-            this.PasswordLabel.Size = new System.Drawing.Size(84, 25);
-            this.PasswordLabel.TabIndex = 1;
-            this.PasswordLabel.Text = "비밀번호";
-            // 
-            // LoginkeyLabel
-            // 
-            this.LoginkeyLabel.AutoSize = true;
-            this.LoginkeyLabel.Location = new System.Drawing.Point(6, 110);
-            this.LoginkeyLabel.Name = "LoginkeyLabel";
-            this.LoginkeyLabel.Size = new System.Drawing.Size(97, 25);
-            this.LoginkeyLabel.TabIndex = 2;
-            this.LoginkeyLabel.Text = "LOGINKEY";
-            // 
-            // EmailText
-            // 
-            this.EmailText.Location = new System.Drawing.Point(103, 30);
-            this.EmailText.Name = "EmailText";
-            this.EmailText.Size = new System.Drawing.Size(244, 31);
-            this.EmailText.TabIndex = 3;
-            // 
-            // PasswordText
-            // 
-            this.PasswordText.Location = new System.Drawing.Point(103, 67);
-            this.PasswordText.Name = "PasswordText";
-            this.PasswordText.Size = new System.Drawing.Size(244, 31);
-            this.PasswordText.TabIndex = 4;
-            // 
-            // LoginkeyText
-            // 
-            this.LoginkeyText.Location = new System.Drawing.Point(103, 107);
-            this.LoginkeyText.Name = "LoginkeyText";
-            this.LoginkeyText.Size = new System.Drawing.Size(244, 31);
-            this.LoginkeyText.TabIndex = 5;
+            this.LoginButton2.Location = new System.Drawing.Point(353, 104);
+            this.LoginButton2.Name = "LoginButton2";
+            this.LoginButton2.Size = new System.Drawing.Size(75, 36);
+            this.LoginButton2.TabIndex = 7;
+            this.LoginButton2.Text = "로그인";
+            this.LoginButton2.UseVisualStyleBackColor = true;
+            this.LoginButton2.Click += new System.EventHandler(this.LoginButton2_Click);
             // 
             // LoginButton1
             // 
@@ -125,15 +90,53 @@
             this.LoginButton1.UseVisualStyleBackColor = true;
             this.LoginButton1.Click += new System.EventHandler(this.LoginButton1_Click);
             // 
-            // LoginButton2
+            // LoginkeyText
             // 
-            this.LoginButton2.Location = new System.Drawing.Point(353, 104);
-            this.LoginButton2.Name = "LoginButton2";
-            this.LoginButton2.Size = new System.Drawing.Size(75, 36);
-            this.LoginButton2.TabIndex = 7;
-            this.LoginButton2.Text = "로그인";
-            this.LoginButton2.UseVisualStyleBackColor = true;
-            this.LoginButton2.Click += new System.EventHandler(this.LoginButton2_Click);
+            this.LoginkeyText.Location = new System.Drawing.Point(103, 107);
+            this.LoginkeyText.Name = "LoginkeyText";
+            this.LoginkeyText.Size = new System.Drawing.Size(244, 31);
+            this.LoginkeyText.TabIndex = 5;
+            // 
+            // PasswordText
+            // 
+            this.PasswordText.Location = new System.Drawing.Point(103, 67);
+            this.PasswordText.Name = "PasswordText";
+            this.PasswordText.Size = new System.Drawing.Size(244, 31);
+            this.PasswordText.TabIndex = 4;
+            // 
+            // EmailText
+            // 
+            this.EmailText.Location = new System.Drawing.Point(103, 30);
+            this.EmailText.Name = "EmailText";
+            this.EmailText.Size = new System.Drawing.Size(244, 31);
+            this.EmailText.TabIndex = 3;
+            // 
+            // LoginkeyLabel
+            // 
+            this.LoginkeyLabel.AutoSize = true;
+            this.LoginkeyLabel.Location = new System.Drawing.Point(6, 110);
+            this.LoginkeyLabel.Name = "LoginkeyLabel";
+            this.LoginkeyLabel.Size = new System.Drawing.Size(97, 25);
+            this.LoginkeyLabel.TabIndex = 2;
+            this.LoginkeyLabel.Text = "LOGINKEY";
+            // 
+            // PasswordLabel
+            // 
+            this.PasswordLabel.AutoSize = true;
+            this.PasswordLabel.Location = new System.Drawing.Point(12, 70);
+            this.PasswordLabel.Name = "PasswordLabel";
+            this.PasswordLabel.Size = new System.Drawing.Size(84, 25);
+            this.PasswordLabel.TabIndex = 1;
+            this.PasswordLabel.Text = "비밀번호";
+            // 
+            // EmailLabel
+            // 
+            this.EmailLabel.AutoSize = true;
+            this.EmailLabel.Location = new System.Drawing.Point(21, 33);
+            this.EmailLabel.Name = "EmailLabel";
+            this.EmailLabel.Size = new System.Drawing.Size(66, 25);
+            this.EmailLabel.TabIndex = 0;
+            this.EmailLabel.Text = "이메일";
             // 
             // DownloadGroup
             // 
@@ -143,37 +146,32 @@
             this.DownloadGroup.Controls.Add(this.NovelNoText);
             this.DownloadGroup.Controls.Add(this.ExtensionLabel);
             this.DownloadGroup.Controls.Add(this.NovelNoLable);
-            this.DownloadGroup.Location = new System.Drawing.Point(12, 177);
+            this.DownloadGroup.Location = new System.Drawing.Point(13, 214);
             this.DownloadGroup.Name = "DownloadGroup";
             this.DownloadGroup.Size = new System.Drawing.Size(439, 115);
             this.DownloadGroup.TabIndex = 1;
             this.DownloadGroup.TabStop = false;
             this.DownloadGroup.Text = "다운로드";
             // 
-            // NovelNoLable
+            // DownloadButton
             // 
-            this.NovelNoLable.AutoSize = true;
-            this.NovelNoLable.Location = new System.Drawing.Point(12, 33);
-            this.NovelNoLable.Name = "NovelNoLable";
-            this.NovelNoLable.Size = new System.Drawing.Size(84, 25);
-            this.NovelNoLable.TabIndex = 0;
-            this.NovelNoLable.Text = "소설번호";
+            this.DownloadButton.Location = new System.Drawing.Point(353, 30);
+            this.DownloadButton.Name = "DownloadButton";
+            this.DownloadButton.Size = new System.Drawing.Size(75, 66);
+            this.DownloadButton.TabIndex = 10;
+            this.DownloadButton.Text = "다운\r\n로드";
+            this.DownloadButton.UseVisualStyleBackColor = true;
+            this.DownloadButton.Click += new System.EventHandler(this.DownloadButton_Click);
             // 
-            // ExtensionLabel
+            // TxtButton
             // 
-            this.ExtensionLabel.AutoSize = true;
-            this.ExtensionLabel.Location = new System.Drawing.Point(21, 69);
-            this.ExtensionLabel.Name = "ExtensionLabel";
-            this.ExtensionLabel.Size = new System.Drawing.Size(66, 25);
-            this.ExtensionLabel.TabIndex = 1;
-            this.ExtensionLabel.Text = "확장자";
-            // 
-            // NovelNoText
-            // 
-            this.NovelNoText.Location = new System.Drawing.Point(103, 30);
-            this.NovelNoText.Name = "NovelNoText";
-            this.NovelNoText.Size = new System.Drawing.Size(244, 31);
-            this.NovelNoText.TabIndex = 6;
+            this.TxtButton.AutoSize = true;
+            this.TxtButton.Location = new System.Drawing.Point(250, 67);
+            this.TxtButton.Name = "TxtButton";
+            this.TxtButton.Size = new System.Drawing.Size(68, 29);
+            this.TxtButton.TabIndex = 8;
+            this.TxtButton.Text = "TXT";
+            this.TxtButton.UseVisualStyleBackColor = true;
             // 
             // EpubButton
             // 
@@ -187,25 +185,30 @@
             this.EpubButton.Text = "EPUB";
             this.EpubButton.UseVisualStyleBackColor = true;
             // 
-            // TxtButton
+            // NovelNoText
             // 
-            this.TxtButton.AutoSize = true;
-            this.TxtButton.Location = new System.Drawing.Point(250, 67);
-            this.TxtButton.Name = "TxtButton";
-            this.TxtButton.Size = new System.Drawing.Size(68, 29);
-            this.TxtButton.TabIndex = 8;
-            this.TxtButton.Text = "TXT";
-            this.TxtButton.UseVisualStyleBackColor = true;
+            this.NovelNoText.Location = new System.Drawing.Point(103, 30);
+            this.NovelNoText.Name = "NovelNoText";
+            this.NovelNoText.Size = new System.Drawing.Size(244, 31);
+            this.NovelNoText.TabIndex = 6;
             // 
-            // DownloadButton
+            // ExtensionLabel
             // 
-            this.DownloadButton.Location = new System.Drawing.Point(353, 30);
-            this.DownloadButton.Name = "DownloadButton";
-            this.DownloadButton.Size = new System.Drawing.Size(75, 66);
-            this.DownloadButton.TabIndex = 10;
-            this.DownloadButton.Text = "다운\r\n로드";
-            this.DownloadButton.UseVisualStyleBackColor = true;
-            this.DownloadButton.Click += new System.EventHandler(this.DownloadButton_Click);
+            this.ExtensionLabel.AutoSize = true;
+            this.ExtensionLabel.Location = new System.Drawing.Point(21, 69);
+            this.ExtensionLabel.Name = "ExtensionLabel";
+            this.ExtensionLabel.Size = new System.Drawing.Size(66, 25);
+            this.ExtensionLabel.TabIndex = 1;
+            this.ExtensionLabel.Text = "확장자";
+            // 
+            // NovelNoLable
+            // 
+            this.NovelNoLable.AutoSize = true;
+            this.NovelNoLable.Location = new System.Drawing.Point(12, 33);
+            this.NovelNoLable.Name = "NovelNoLable";
+            this.NovelNoLable.Size = new System.Drawing.Size(84, 25);
+            this.NovelNoLable.TabIndex = 0;
+            this.NovelNoLable.Text = "소설번호";
             // 
             // ConsoleBox
             // 
@@ -215,14 +218,47 @@
             this.ConsoleBox.Name = "ConsoleBox";
             this.ConsoleBox.ReadOnly = true;
             this.ConsoleBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ConsoleBox.Size = new System.Drawing.Size(420, 269);
+            this.ConsoleBox.Size = new System.Drawing.Size(420, 306);
             this.ConsoleBox.TabIndex = 5;
+            // 
+            // ThreadLabel
+            // 
+            this.ThreadLabel.AutoSize = true;
+            this.ThreadLabel.Location = new System.Drawing.Point(111, 186);
+            this.ThreadLabel.Name = "ThreadLabel";
+            this.ThreadLabel.Size = new System.Drawing.Size(108, 25);
+            this.ThreadLabel.TabIndex = 11;
+            this.ThreadLabel.Text = "스레드 개수";
+            // 
+            // ThreadNum
+            // 
+            this.ThreadNum.Location = new System.Drawing.Point(225, 183);
+            this.ThreadNum.Maximum = new decimal(new int[] {
+            20,
+            0,
+            0,
+            0});
+            this.ThreadNum.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ThreadNum.Name = "ThreadNum";
+            this.ThreadNum.Size = new System.Drawing.Size(120, 31);
+            this.ThreadNum.TabIndex = 12;
+            this.ThreadNum.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(890, 314);
+            this.ClientSize = new System.Drawing.Size(890, 348);
+            this.Controls.Add(this.ThreadNum);
+            this.Controls.Add(this.ThreadLabel);
             this.Controls.Add(this.ConsoleBox);
             this.Controls.Add(this.DownloadGroup);
             this.Controls.Add(this.LoginGroup);
@@ -238,6 +274,7 @@
             this.LoginGroup.PerformLayout();
             this.DownloadGroup.ResumeLayout(false);
             this.DownloadGroup.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -262,6 +299,8 @@
         private System.Windows.Forms.Label NovelNoLable;
         private System.Windows.Forms.Button DownloadButton;
         private System.Windows.Forms.TextBox ConsoleBox;
+        private System.Windows.Forms.Label ThreadLabel;
+        private System.Windows.Forms.NumericUpDown ThreadNum;
     }
 }
 
