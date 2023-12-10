@@ -20,32 +20,27 @@ namespace NovelpiaDownloader
         {
             InitializeComponent();
             novelpia = new Novelpia();
-            defaults = new Dictionary<string, string>();
-            if (File.Exists("account.txt"))
+
+            if (File.Exists("config.json"))
             {
-                foreach (string line in File.ReadLines("account.txt"))
-                {
-                    string[] split = line.Split('>');
-                    defaults.Add(split[0], split[1]);
-                }
-                if (defaults.ContainsKey("email") && defaults.ContainsKey("wd"))
-                {
-                    if (novelpia.Login(EmailText.Text = defaults["email"], PasswordText.Text = defaults["wd"]))
+                var config_dict = new JavaScriptSerializer().Deserialize<Dictionary<string, dynamic>>(File.ReadAllText("config.json"));
+                if (config_dict.ContainsKey("thread_num"))
+                    ThreadNum.Value = config_dict["thread_num"];
+                if (config_dict.ContainsKey("email") && config_dict.ContainsKey("wd"))
+                    if (novelpia.Login(EmailText.Text = config_dict["email"], PasswordText.Text = config_dict["wd"]))
                     {
                         ConsoleBox.Text += "로그인 성공!\r\n";
                         LoginkeyText.Text = novelpia.loginkey;
                         return;
                     }
-                    ConsoleBox.Text += "로그인 실패!\r\n";
-                    File.Delete("account.txt");
-                }
-                if (defaults.ContainsKey("loginkey"))
-                    novelpia.loginkey = LoginkeyText.Text = defaults["loginkey"];
+                    else
+                        ConsoleBox.Text += "로그인 실패!\r\n";
+                if (config_dict.ContainsKey("loginkey"))
+                    novelpia.loginkey = LoginkeyText.Text = config_dict["loginkey"];
             }
         }
 
         readonly Novelpia novelpia;
-        private readonly Dictionary<string, string> defaults;
 
         private void DownloadButton_Click(object sender, EventArgs e)
         {
@@ -344,25 +339,29 @@ namespace NovelpiaDownloader
             {
                 ConsoleBox.AppendText("로그인 성공!\r\n");
                 LoginkeyText.Text = novelpia.loginkey;
-                using (StreamWriter sw = new StreamWriter("account.txt"))
-                {
-                    sw.WriteLine("email>" + email);
-                    sw.WriteLine("wd>" + password);
-                    sw.WriteLine("loginkey>" + novelpia.loginkey);
-                }
             }
             else
             {
                 ConsoleBox.AppendText("로그인 실패!\r\n");
-                File.Delete("account.txt");
             }
         }
 
         private void LoginButton2_Click(object sender, EventArgs e)
         {
             novelpia.loginkey = LoginkeyText.Text;
-            using (StreamWriter sw = new StreamWriter("account.txt"))
-                sw.WriteLine("loginkey>" + novelpia.loginkey);
+        }
+
+        private void MainWin_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            var config_dict = new Dictionary<string, dynamic>();
+            config_dict.Add("thread_num", ThreadNum.Value);
+            config_dict.Add("email", EmailText.Text);
+            config_dict.Add("wd", PasswordText.Text);
+            config_dict.Add("loginkey", LoginkeyText.Text);
+            using (StreamWriter sw = new StreamWriter("config.json"))
+            {
+                sw.Write(new JavaScriptSerializer().Serialize(config_dict));
+            }
         }
     }
 }

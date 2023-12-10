@@ -270,6 +270,7 @@
             this.Name = "MainWin";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "NovelpiaDownloader";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainWin_FormClosed);
             this.LoginGroup.ResumeLayout(false);
             this.LoginGroup.PerformLayout();
             this.DownloadGroup.ResumeLayout(false);
