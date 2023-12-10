@@ -131,15 +131,9 @@ namespace NovelpiaDownloader
                         url = match.Groups[1].Value;
                     }
 
-                    threads.Add(new Thread(() =>
-                    {
-                        Invoke(new Action(() => ConsoleBox.AppendText($"커버 다운로드 시작\r\n{url}\r\n")));
-                        using (var downloader = new WebClient())
-                        {
-                            downloader.DownloadFile("https:" + url, Path.Combine(directory, "OEBPS/Images/cover.jpg"));
-                        }
-                        Invoke(new Action(() => ConsoleBox.AppendText($"커버 다운로드 완료\r\n")));
-                    }));
+                    string cover_url = url;
+                    threads.Add(new Thread(() => DownloadImage(cover_url,
+                        Path.Combine(directory, $"OEBPS/Images/cover.jpg"), "커버")));
 
                     using (var file = new StreamWriter(Path.Combine(directory, "OEBPS/toc.ncx"), false))
                     {
@@ -184,15 +178,10 @@ namespace NovelpiaDownloader
                                         {
                                             url = match.Groups[1].Value;
 
-                                            threads.Add(new Thread(() =>
-                                            {
-                                                Invoke(new Action(() => ConsoleBox.AppendText($"삽화 다운로드 시작\r\n{url}\r\n")));
-                                                using (var downloader = new WebClient())
-                                                {
-                                                    downloader.DownloadFile("https:" + url, Path.Combine(directory, $"OEBPS/Images/{imageNo}.jpg"));
-                                                }
-                                                Invoke(new Action(() => ConsoleBox.AppendText($"삽화 다운로드 완료\r\n")));
-                                            }));
+                                            string image_url = url;
+                                            int image_no = imageNo;
+                                            threads.Add(new Thread(() => DownloadImage(image_url,
+                                                Path.Combine(directory, $"OEBPS/Images/{image_no}.jpg"), "삽화")));
 
                                             textStr = Regex.Replace(textStr, @"<img.+?src=\"".+?\"".+?>",
                                                 $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.jpg\" width=\"100%\"/>");
@@ -281,18 +270,35 @@ namespace NovelpiaDownloader
 
         private void DownloadChapter(string chapterId, string chapterName, string jsonPath)
         {
-            string resp = PostRequest($"https://novelpia.com/proc/viewer_data/{chapterId}", novelpia.loginkey);
-            if (resp != "" && !resp.Contains("본인인증"))
+            try
             {
+                string resp = PostRequest($"https://novelpia.com/proc/viewer_data/{chapterId}", novelpia.loginkey);
+                if (string.IsNullOrEmpty(resp) || resp.Contains("본인인증"))
+                    throw new Exception();
                 using (var file = new StreamWriter(jsonPath, false))
-                {
                     file.Write(resp);
-                }
                 Invoke(new Action(() => ConsoleBox.AppendText(chapterName + "\r\n")));
             }
-            else
+            catch
             {
                 Invoke(new Action(() => ConsoleBox.AppendText(chapterName + " ERROR!\r\n")));
+            }
+        }
+
+        private void DownloadImage(string url, string path, string type)
+        {
+            if (!url.StartsWith("http"))
+                url = "https:" + url;
+            Invoke(new Action(() => ConsoleBox.AppendText($"{type} 다운로드 시작\r\n{url}\r\n")));
+            try
+            {
+                using (var downloader = new WebClient())
+                    downloader.DownloadFile(url, path);
+                Invoke(new Action(() => ConsoleBox.AppendText($"{type} 다운로드 완료\r\n")));
+            }
+            catch
+            {
+                Invoke(new Action(() => ConsoleBox.AppendText($"{type} 다운로드 실패\r\n{url}\r\n")));
             }
         }
 
