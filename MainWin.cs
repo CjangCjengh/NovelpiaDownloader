@@ -26,6 +26,8 @@ namespace NovelpiaDownloader
                 var config_dict = new JavaScriptSerializer().Deserialize<Dictionary<string, dynamic>>(File.ReadAllText("config.json"));
                 if (config_dict.ContainsKey("thread_num"))
                     ThreadNum.Value = config_dict["thread_num"];
+                if (config_dict.ContainsKey("interval_num"))
+                    IntervalNum.Value = config_dict["interval_num"];
                 if (config_dict.ContainsKey("email") && config_dict.ContainsKey("wd"))
                     if (novelpia.Login(EmailText.Text = config_dict["email"], PasswordText.Text = config_dict["wd"]))
                     {
@@ -88,7 +90,7 @@ namespace NovelpiaDownloader
                     page++;
                 }
 
-                ExecuteThreads(threads, (int)ThreadNum.Value);
+                ExecuteThreads(threads, (int)ThreadNum.Value, (float)IntervalNum.Value);
                 threads.Clear();
 
                 if (saveAsEpub)
@@ -224,7 +226,7 @@ namespace NovelpiaDownloader
                     if (File.Exists(path))
                         File.Delete(path);
 
-                    ExecuteThreads(threads, (int)ThreadNum.Value);
+                    ExecuteThreads(threads, (int)ThreadNum.Value, (float)IntervalNum.Value);
 
                     ZipFile.CreateFromDirectory(directory, path);
                 }
@@ -297,7 +299,7 @@ namespace NovelpiaDownloader
             }
         }
 
-        private void ExecuteThreads(List<Thread> threads, int batch_size)
+        private void ExecuteThreads(List<Thread> threads, int batch_size, float interval)
         {
             for (int i = 0; i < threads.Count; i += batch_size)
             {
@@ -307,6 +309,7 @@ namespace NovelpiaDownloader
                     threads[i + j].Start();
                 for (int j = 0; j < limit; j++)
                     threads[i + j].Join();
+                Thread.Sleep((int)(interval * 1000));
             }
         }
 
@@ -353,11 +356,14 @@ namespace NovelpiaDownloader
 
         private void MainWin_FormClosed(object sender, FormClosedEventArgs e)
         {
-            var config_dict = new Dictionary<string, dynamic>();
-            config_dict.Add("thread_num", ThreadNum.Value);
-            config_dict.Add("email", EmailText.Text);
-            config_dict.Add("wd", PasswordText.Text);
-            config_dict.Add("loginkey", LoginkeyText.Text);
+            var config_dict = new Dictionary<string, dynamic>
+            {
+                { "thread_num", ThreadNum.Value },
+                { "interval_num", IntervalNum.Value },
+                { "email", EmailText.Text },
+                { "wd", PasswordText.Text },
+                { "loginkey", LoginkeyText.Text }
+            };
             using (StreamWriter sw = new StreamWriter("config.json"))
             {
                 sw.Write(new JavaScriptSerializer().Serialize(config_dict));

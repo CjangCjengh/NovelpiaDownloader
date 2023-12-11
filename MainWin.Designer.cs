@@ -48,9 +48,13 @@
             this.ConsoleBox = new System.Windows.Forms.TextBox();
             this.ThreadLabel = new System.Windows.Forms.Label();
             this.ThreadNum = new System.Windows.Forms.NumericUpDown();
+            this.IntervalLabel = new System.Windows.Forms.Label();
+            this.SecondLabel = new System.Windows.Forms.Label();
+            this.IntervalNum = new System.Windows.Forms.NumericUpDown();
             this.LoginGroup.SuspendLayout();
             this.DownloadGroup.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.IntervalNum)).BeginInit();
             this.SuspendLayout();
             // 
             // LoginGroup
@@ -224,7 +228,7 @@
             // ThreadLabel
             // 
             this.ThreadLabel.AutoSize = true;
-            this.ThreadLabel.Location = new System.Drawing.Point(111, 186);
+            this.ThreadLabel.Location = new System.Drawing.Point(18, 186);
             this.ThreadLabel.Name = "ThreadLabel";
             this.ThreadLabel.Size = new System.Drawing.Size(108, 25);
             this.ThreadLabel.TabIndex = 11;
@@ -232,19 +236,14 @@
             // 
             // ThreadNum
             // 
-            this.ThreadNum.Location = new System.Drawing.Point(225, 183);
-            this.ThreadNum.Maximum = new decimal(new int[] {
-            20,
-            0,
-            0,
-            0});
+            this.ThreadNum.Location = new System.Drawing.Point(132, 183);
             this.ThreadNum.Minimum = new decimal(new int[] {
             1,
             0,
             0,
             0});
             this.ThreadNum.Name = "ThreadNum";
-            this.ThreadNum.Size = new System.Drawing.Size(120, 31);
+            this.ThreadNum.Size = new System.Drawing.Size(82, 31);
             this.ThreadNum.TabIndex = 12;
             this.ThreadNum.Value = new decimal(new int[] {
             1,
@@ -252,11 +251,50 @@
             0,
             0});
             // 
+            // IntervalLabel
+            // 
+            this.IntervalLabel.AutoSize = true;
+            this.IntervalLabel.Location = new System.Drawing.Point(268, 186);
+            this.IntervalLabel.Name = "IntervalLabel";
+            this.IntervalLabel.Size = new System.Drawing.Size(48, 25);
+            this.IntervalLabel.TabIndex = 13;
+            this.IntervalLabel.Text = "간격";
+            // 
+            // SecondLabel
+            // 
+            this.SecondLabel.AutoSize = true;
+            this.SecondLabel.Location = new System.Drawing.Point(410, 186);
+            this.SecondLabel.Name = "SecondLabel";
+            this.SecondLabel.Size = new System.Drawing.Size(30, 25);
+            this.SecondLabel.TabIndex = 14;
+            this.SecondLabel.Text = "초";
+            // 
+            // IntervalNum
+            // 
+            this.IntervalNum.DecimalPlaces = 1;
+            this.IntervalNum.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.IntervalNum.Location = new System.Drawing.Point(322, 183);
+            this.IntervalNum.Maximum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.IntervalNum.Name = "IntervalNum";
+            this.IntervalNum.Size = new System.Drawing.Size(82, 31);
+            this.IntervalNum.TabIndex = 15;
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(890, 348);
+            this.Controls.Add(this.IntervalNum);
+            this.Controls.Add(this.SecondLabel);
+            this.Controls.Add(this.IntervalLabel);
             this.Controls.Add(this.ThreadNum);
             this.Controls.Add(this.ThreadLabel);
             this.Controls.Add(this.ConsoleBox);
@@ -276,6 +314,7 @@
             this.DownloadGroup.ResumeLayout(false);
             this.DownloadGroup.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.IntervalNum)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -302,6 +341,9 @@
         private System.Windows.Forms.TextBox ConsoleBox;
         private System.Windows.Forms.Label ThreadLabel;
         private System.Windows.Forms.NumericUpDown ThreadNum;
+        private System.Windows.Forms.Label IntervalLabel;
+        private System.Windows.Forms.Label SecondLabel;
+        private System.Windows.Forms.NumericUpDown IntervalNum;
     }
 }
 
