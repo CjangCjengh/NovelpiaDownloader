@@ -51,10 +51,18 @@
             this.IntervalLabel = new System.Windows.Forms.Label();
             this.SecondLabel = new System.Windows.Forms.Label();
             this.IntervalNum = new System.Windows.Forms.NumericUpDown();
+            this.FromCheck = new System.Windows.Forms.CheckBox();
+            this.FromNum = new System.Windows.Forms.NumericUpDown();
+            this.FromLabel = new System.Windows.Forms.Label();
+            this.ToLabel = new System.Windows.Forms.Label();
+            this.ToNum = new System.Windows.Forms.NumericUpDown();
+            this.ToCheck = new System.Windows.Forms.CheckBox();
             this.LoginGroup.SuspendLayout();
             this.DownloadGroup.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.IntervalNum)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).BeginInit();
             this.SuspendLayout();
             // 
             // LoginGroup
@@ -144,6 +152,12 @@
             // 
             // DownloadGroup
             // 
+            this.DownloadGroup.Controls.Add(this.ToLabel);
+            this.DownloadGroup.Controls.Add(this.ToNum);
+            this.DownloadGroup.Controls.Add(this.ToCheck);
+            this.DownloadGroup.Controls.Add(this.FromLabel);
+            this.DownloadGroup.Controls.Add(this.FromNum);
+            this.DownloadGroup.Controls.Add(this.FromCheck);
             this.DownloadGroup.Controls.Add(this.DownloadButton);
             this.DownloadGroup.Controls.Add(this.TxtButton);
             this.DownloadGroup.Controls.Add(this.EpubButton);
@@ -152,14 +166,14 @@
             this.DownloadGroup.Controls.Add(this.NovelNoLable);
             this.DownloadGroup.Location = new System.Drawing.Point(13, 214);
             this.DownloadGroup.Name = "DownloadGroup";
-            this.DownloadGroup.Size = new System.Drawing.Size(439, 115);
+            this.DownloadGroup.Size = new System.Drawing.Size(439, 152);
             this.DownloadGroup.TabIndex = 1;
             this.DownloadGroup.TabStop = false;
             this.DownloadGroup.Text = "다운로드";
             // 
             // DownloadButton
             // 
-            this.DownloadButton.Location = new System.Drawing.Point(353, 30);
+            this.DownloadButton.Location = new System.Drawing.Point(352, 67);
             this.DownloadButton.Name = "DownloadButton";
             this.DownloadButton.Size = new System.Drawing.Size(75, 66);
             this.DownloadButton.TabIndex = 10;
@@ -170,7 +184,7 @@
             // TxtButton
             // 
             this.TxtButton.AutoSize = true;
-            this.TxtButton.Location = new System.Drawing.Point(250, 67);
+            this.TxtButton.Location = new System.Drawing.Point(249, 104);
             this.TxtButton.Name = "TxtButton";
             this.TxtButton.Size = new System.Drawing.Size(68, 29);
             this.TxtButton.TabIndex = 8;
@@ -181,7 +195,7 @@
             // 
             this.EpubButton.AutoSize = true;
             this.EpubButton.Checked = true;
-            this.EpubButton.Location = new System.Drawing.Point(121, 67);
+            this.EpubButton.Location = new System.Drawing.Point(120, 104);
             this.EpubButton.Name = "EpubButton";
             this.EpubButton.Size = new System.Drawing.Size(80, 29);
             this.EpubButton.TabIndex = 7;
@@ -191,7 +205,7 @@
             // 
             // NovelNoText
             // 
-            this.NovelNoText.Location = new System.Drawing.Point(103, 30);
+            this.NovelNoText.Location = new System.Drawing.Point(102, 67);
             this.NovelNoText.Name = "NovelNoText";
             this.NovelNoText.Size = new System.Drawing.Size(244, 31);
             this.NovelNoText.TabIndex = 6;
@@ -199,7 +213,7 @@
             // ExtensionLabel
             // 
             this.ExtensionLabel.AutoSize = true;
-            this.ExtensionLabel.Location = new System.Drawing.Point(21, 69);
+            this.ExtensionLabel.Location = new System.Drawing.Point(20, 106);
             this.ExtensionLabel.Name = "ExtensionLabel";
             this.ExtensionLabel.Size = new System.Drawing.Size(66, 25);
             this.ExtensionLabel.TabIndex = 1;
@@ -208,7 +222,7 @@
             // NovelNoLable
             // 
             this.NovelNoLable.AutoSize = true;
-            this.NovelNoLable.Location = new System.Drawing.Point(12, 33);
+            this.NovelNoLable.Location = new System.Drawing.Point(11, 70);
             this.NovelNoLable.Name = "NovelNoLable";
             this.NovelNoLable.Size = new System.Drawing.Size(84, 25);
             this.NovelNoLable.TabIndex = 0;
@@ -222,7 +236,7 @@
             this.ConsoleBox.Name = "ConsoleBox";
             this.ConsoleBox.ReadOnly = true;
             this.ConsoleBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ConsoleBox.Size = new System.Drawing.Size(420, 306);
+            this.ConsoleBox.Size = new System.Drawing.Size(420, 343);
             this.ConsoleBox.TabIndex = 5;
             // 
             // ThreadLabel
@@ -287,11 +301,97 @@
             this.IntervalNum.Size = new System.Drawing.Size(82, 31);
             this.IntervalNum.TabIndex = 15;
             // 
+            // FromCheck
+            // 
+            this.FromCheck.AutoSize = true;
+            this.FromCheck.Location = new System.Drawing.Point(25, 35);
+            this.FromCheck.Name = "FromCheck";
+            this.FromCheck.Size = new System.Drawing.Size(22, 21);
+            this.FromCheck.TabIndex = 11;
+            this.FromCheck.UseVisualStyleBackColor = true;
+            this.FromCheck.CheckedChanged += new System.EventHandler(this.FromCheck_CheckedChanged);
+            // 
+            // FromNum
+            // 
+            this.FromNum.Enabled = false;
+            this.FromNum.Location = new System.Drawing.Point(53, 30);
+            this.FromNum.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.FromNum.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.FromNum.Name = "FromNum";
+            this.FromNum.Size = new System.Drawing.Size(69, 31);
+            this.FromNum.TabIndex = 12;
+            this.FromNum.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // FromLabel
+            // 
+            this.FromLabel.AutoSize = true;
+            this.FromLabel.Enabled = false;
+            this.FromLabel.Location = new System.Drawing.Point(128, 33);
+            this.FromLabel.Name = "FromLabel";
+            this.FromLabel.Size = new System.Drawing.Size(66, 25);
+            this.FromLabel.TabIndex = 13;
+            this.FromLabel.Text = "장부터";
+            // 
+            // ToLabel
+            // 
+            this.ToLabel.AutoSize = true;
+            this.ToLabel.Enabled = false;
+            this.ToLabel.Location = new System.Drawing.Point(352, 33);
+            this.ToLabel.Name = "ToLabel";
+            this.ToLabel.Size = new System.Drawing.Size(66, 25);
+            this.ToLabel.TabIndex = 16;
+            this.ToLabel.Text = "장까지";
+            // 
+            // ToNum
+            // 
+            this.ToNum.Enabled = false;
+            this.ToNum.Location = new System.Drawing.Point(277, 30);
+            this.ToNum.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.ToNum.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ToNum.Name = "ToNum";
+            this.ToNum.Size = new System.Drawing.Size(69, 31);
+            this.ToNum.TabIndex = 15;
+            this.ToNum.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // ToCheck
+            // 
+            this.ToCheck.AutoSize = true;
+            this.ToCheck.Location = new System.Drawing.Point(249, 35);
+            this.ToCheck.Name = "ToCheck";
+            this.ToCheck.Size = new System.Drawing.Size(22, 21);
+            this.ToCheck.TabIndex = 14;
+            this.ToCheck.UseVisualStyleBackColor = true;
+            this.ToCheck.CheckedChanged += new System.EventHandler(this.ToCheck_CheckedChanged);
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(890, 348);
+            this.ClientSize = new System.Drawing.Size(890, 387);
             this.Controls.Add(this.IntervalNum);
             this.Controls.Add(this.SecondLabel);
             this.Controls.Add(this.IntervalLabel);
@@ -315,6 +415,8 @@
             this.DownloadGroup.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.IntervalNum)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -344,6 +446,12 @@
         private System.Windows.Forms.Label IntervalLabel;
         private System.Windows.Forms.Label SecondLabel;
         private System.Windows.Forms.NumericUpDown IntervalNum;
+        private System.Windows.Forms.NumericUpDown FromNum;
+        private System.Windows.Forms.CheckBox FromCheck;
+        private System.Windows.Forms.Label FromLabel;
+        private System.Windows.Forms.Label ToLabel;
+        private System.Windows.Forms.NumericUpDown ToNum;
+        private System.Windows.Forms.CheckBox ToCheck;
     }
 }
 

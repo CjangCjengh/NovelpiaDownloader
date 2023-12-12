@@ -63,6 +63,10 @@ namespace NovelpiaDownloader
             ConsoleBox.AppendText("다운로드 시작!\r\n");
             string directory = Path.Combine(Path.GetDirectoryName(path), novelNo);
             Directory.CreateDirectory(directory);
+            int thread_num = (int)ThreadNum.Value;
+            float interval = (float)IntervalNum.Value;
+            int from = FromCheck.Checked ? (int)FromNum.Value - 1 : 0;
+            int to = ToCheck.Checked ? (int)ToNum.Value : int.MaxValue;
             Task.Run(() =>
             {
                 int chapterNo = 0;
@@ -70,7 +74,8 @@ namespace NovelpiaDownloader
                 var chapterIds = new List<string>();
                 var chapterNames = new List<(string, string)>();
                 List<Thread> threads = new List<Thread>();
-                while (true)
+                bool get_content = true;
+                while (get_content)
                 {
                     string data = $"novel_no={novelNo}&sort=DOWN&page={page}";
                     string resp = PostRequest("https://novelpia.com/proc/episode_list", "", data);
@@ -79,6 +84,16 @@ namespace NovelpiaDownloader
                         break;
                     foreach (Match chapter in chapters)
                     {
+                        if (chapterNo < from)
+                        {
+                            chapterNo++;
+                            continue;
+                        }
+                        if (chapterNo >= to)
+                        {
+                            get_content = false;
+                            break;
+                        }
                         string chapterId = chapter.Groups[1].Value;
                         string chapterName = chapter.Groups[2].Value;
                         string jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
@@ -90,7 +105,7 @@ namespace NovelpiaDownloader
                     page++;
                 }
 
-                ExecuteThreads(threads, (int)ThreadNum.Value, (float)IntervalNum.Value);
+                ExecuteThreads(threads, thread_num, interval);
                 threads.Clear();
 
                 if (saveAsEpub)
@@ -226,7 +241,7 @@ namespace NovelpiaDownloader
                     if (File.Exists(path))
                         File.Delete(path);
 
-                    ExecuteThreads(threads, (int)ThreadNum.Value, (float)IntervalNum.Value);
+                    ExecuteThreads(threads, thread_num, interval);
 
                     ZipFile.CreateFromDirectory(directory, path);
                 }
@@ -368,6 +383,16 @@ namespace NovelpiaDownloader
             {
                 sw.Write(new JavaScriptSerializer().Serialize(config_dict));
             }
+        }
+
+        private void FromCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            FromNum.Enabled = FromLabel.Enabled = FromCheck.Checked;
+        }
+
+        private void ToCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            ToNum.Enabled = ToLabel.Enabled = ToCheck.Checked;
         }
     }
 }
