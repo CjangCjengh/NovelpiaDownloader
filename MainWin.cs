@@ -31,12 +31,12 @@ namespace NovelpiaDownloader
                 if (config_dict.ContainsKey("email") && config_dict.ContainsKey("wd"))
                     if (novelpia.Login(EmailText.Text = config_dict["email"], PasswordText.Text = config_dict["wd"]))
                     {
-                        ConsoleBox.Text += "로그인 성공!\r\n";
+                        ConsoleBox.Text += "Login Success!\r\n";
                         LoginkeyText.Text = novelpia.loginkey;
                         return;
                     }
                     else
-                        ConsoleBox.Text += "로그인 실패!\r\n";
+                        ConsoleBox.Text += "Login Failed!\r\n";
                 if (config_dict.ContainsKey("loginkey"))
                     novelpia.loginkey = LoginkeyText.Text = config_dict["loginkey"];
             }
@@ -60,7 +60,7 @@ namespace NovelpiaDownloader
 
         void Download(string novelNo, bool saveAsEpub, string path)
         {
-            ConsoleBox.AppendText("다운로드 시작!\r\n");
+            ConsoleBox.AppendText("Start Download!\r\n");
             string directory = Path.Combine(Path.GetDirectoryName(path), novelNo);
             Directory.CreateDirectory(directory);
             int thread_num = (int)ThreadNum.Value;
@@ -145,7 +145,7 @@ namespace NovelpiaDownloader
 
                     string cover_url = url;
                     threads.Add(new Thread(() => DownloadImage(cover_url,
-                        Path.Combine(directory, $"OEBPS/Images/cover.jpg"), "커버")));
+                        Path.Combine(directory, $"OEBPS/Images/cover.jpg"), "cover")));
 
                     using (var file = new StreamWriter(Path.Combine(directory, "OEBPS/toc.ncx"), false))
                     {
@@ -193,7 +193,7 @@ namespace NovelpiaDownloader
                                             string image_url = url;
                                             int image_no = imageNo;
                                             threads.Add(new Thread(() => DownloadImage(image_url,
-                                                Path.Combine(directory, $"OEBPS/Images/{image_no}.jpg"), "삽화")));
+                                                Path.Combine(directory, $"OEBPS/Images/{image_no}.jpg"), "illustration")));
 
                                             textStr = Regex.Replace(textStr, @"<img.+?src=\"".+?\"".+?>",
                                                 $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.jpg\" width=\"100%\"/>");
@@ -276,7 +276,7 @@ namespace NovelpiaDownloader
                     }
                 }
                 Directory.Delete(directory, true);
-                Invoke(new Action(() => ConsoleBox.AppendText("다운로드 완료!\r\n")));
+                Invoke(new Action(() => ConsoleBox.AppendText("Finish Download!\r\n")));
             });
         }
 
@@ -301,16 +301,16 @@ namespace NovelpiaDownloader
         {
             if (!url.StartsWith("http"))
                 url = "https:" + url;
-            Invoke(new Action(() => ConsoleBox.AppendText($"{type} 다운로드 시작\r\n{url}\r\n")));
+            Invoke(new Action(() => ConsoleBox.AppendText($"Downloading {type}\r\n{url}\r\n")));
             try
             {
                 using (var downloader = new WebClient())
                     downloader.DownloadFile(url, path);
-                Invoke(new Action(() => ConsoleBox.AppendText($"{type} 다운로드 완료\r\n")));
+                Invoke(new Action(() => ConsoleBox.AppendText($"{type} downloaded\r\n")));
             }
             catch
             {
-                Invoke(new Action(() => ConsoleBox.AppendText($"{type} 다운로드 실패\r\n{url}\r\n")));
+                Invoke(new Action(() => ConsoleBox.AppendText($"{type} download failed\r\n{url}\r\n")));
             }
         }
 
@@ -355,12 +355,12 @@ namespace NovelpiaDownloader
             string password = PasswordText.Text;
             if (novelpia.Login(email, password))
             {
-                ConsoleBox.AppendText("로그인 성공!\r\n");
+                ConsoleBox.AppendText("Login Success!\r\n");
                 LoginkeyText.Text = novelpia.loginkey;
             }
             else
             {
-                ConsoleBox.AppendText("로그인 실패!\r\n");
+                ConsoleBox.AppendText("Login Failed!\r\n");
             }
         }
 
@@ -387,12 +387,12 @@ namespace NovelpiaDownloader
 
         private void FromCheck_CheckedChanged(object sender, EventArgs e)
         {
-            FromNum.Enabled = FromLabel.Enabled = FromCheck.Checked;
+            FromNum.Enabled = FromCheck.Checked;
         }
 
         private void ToCheck_CheckedChanged(object sender, EventArgs e)
         {
-            ToNum.Enabled = ToLabel.Enabled = ToCheck.Checked;
+            ToNum.Enabled = ToCheck.Checked;
         }
     }
 }

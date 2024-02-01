@@ -39,6 +39,10 @@
             this.PasswordLabel = new System.Windows.Forms.Label();
             this.EmailLabel = new System.Windows.Forms.Label();
             this.DownloadGroup = new System.Windows.Forms.GroupBox();
+            this.ToNum = new System.Windows.Forms.NumericUpDown();
+            this.ToCheck = new System.Windows.Forms.CheckBox();
+            this.FromNum = new System.Windows.Forms.NumericUpDown();
+            this.FromCheck = new System.Windows.Forms.CheckBox();
             this.DownloadButton = new System.Windows.Forms.Button();
             this.TxtButton = new System.Windows.Forms.RadioButton();
             this.EpubButton = new System.Windows.Forms.RadioButton();
@@ -48,21 +52,14 @@
             this.ConsoleBox = new System.Windows.Forms.TextBox();
             this.ThreadLabel = new System.Windows.Forms.Label();
             this.ThreadNum = new System.Windows.Forms.NumericUpDown();
-            this.IntervalLabel = new System.Windows.Forms.Label();
             this.SecondLabel = new System.Windows.Forms.Label();
             this.IntervalNum = new System.Windows.Forms.NumericUpDown();
-            this.FromCheck = new System.Windows.Forms.CheckBox();
-            this.FromNum = new System.Windows.Forms.NumericUpDown();
-            this.FromLabel = new System.Windows.Forms.Label();
-            this.ToLabel = new System.Windows.Forms.Label();
-            this.ToNum = new System.Windows.Forms.NumericUpDown();
-            this.ToCheck = new System.Windows.Forms.CheckBox();
             this.LoginGroup.SuspendLayout();
             this.DownloadGroup.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.IntervalNum)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).BeginInit();
             this.SuspendLayout();
             // 
             // LoginGroup
@@ -80,7 +77,7 @@
             this.LoginGroup.Size = new System.Drawing.Size(439, 159);
             this.LoginGroup.TabIndex = 0;
             this.LoginGroup.TabStop = false;
-            this.LoginGroup.Text = "로그인";
+            this.LoginGroup.Text = "Login";
             // 
             // LoginButton2
             // 
@@ -88,7 +85,7 @@
             this.LoginButton2.Name = "LoginButton2";
             this.LoginButton2.Size = new System.Drawing.Size(75, 36);
             this.LoginButton2.TabIndex = 7;
-            this.LoginButton2.Text = "로그인";
+            this.LoginButton2.Text = "Login";
             this.LoginButton2.UseVisualStyleBackColor = true;
             this.LoginButton2.Click += new System.EventHandler(this.LoginButton2_Click);
             // 
@@ -98,7 +95,7 @@
             this.LoginButton1.Name = "LoginButton1";
             this.LoginButton1.Size = new System.Drawing.Size(75, 68);
             this.LoginButton1.TabIndex = 6;
-            this.LoginButton1.Text = "로그인";
+            this.LoginButton1.Text = "Login";
             this.LoginButton1.UseVisualStyleBackColor = true;
             this.LoginButton1.Click += new System.EventHandler(this.LoginButton1_Click);
             // 
@@ -135,27 +132,25 @@
             // PasswordLabel
             // 
             this.PasswordLabel.AutoSize = true;
-            this.PasswordLabel.Location = new System.Drawing.Point(12, 70);
+            this.PasswordLabel.Location = new System.Drawing.Point(10, 70);
             this.PasswordLabel.Name = "PasswordLabel";
-            this.PasswordLabel.Size = new System.Drawing.Size(84, 25);
+            this.PasswordLabel.Size = new System.Drawing.Size(88, 25);
             this.PasswordLabel.TabIndex = 1;
-            this.PasswordLabel.Text = "비밀번호";
+            this.PasswordLabel.Text = "Password";
             // 
             // EmailLabel
             // 
             this.EmailLabel.AutoSize = true;
-            this.EmailLabel.Location = new System.Drawing.Point(21, 33);
+            this.EmailLabel.Location = new System.Drawing.Point(27, 33);
             this.EmailLabel.Name = "EmailLabel";
-            this.EmailLabel.Size = new System.Drawing.Size(66, 25);
+            this.EmailLabel.Size = new System.Drawing.Size(54, 25);
             this.EmailLabel.TabIndex = 0;
-            this.EmailLabel.Text = "이메일";
+            this.EmailLabel.Text = "Email";
             // 
             // DownloadGroup
             // 
-            this.DownloadGroup.Controls.Add(this.ToLabel);
             this.DownloadGroup.Controls.Add(this.ToNum);
             this.DownloadGroup.Controls.Add(this.ToCheck);
-            this.DownloadGroup.Controls.Add(this.FromLabel);
             this.DownloadGroup.Controls.Add(this.FromNum);
             this.DownloadGroup.Controls.Add(this.FromCheck);
             this.DownloadGroup.Controls.Add(this.DownloadButton);
@@ -169,7 +164,75 @@
             this.DownloadGroup.Size = new System.Drawing.Size(439, 152);
             this.DownloadGroup.TabIndex = 1;
             this.DownloadGroup.TabStop = false;
-            this.DownloadGroup.Text = "다운로드";
+            this.DownloadGroup.Text = "Download";
+            // 
+            // ToNum
+            // 
+            this.ToNum.Enabled = false;
+            this.ToNum.Location = new System.Drawing.Point(343, 30);
+            this.ToNum.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.ToNum.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ToNum.Name = "ToNum";
+            this.ToNum.Size = new System.Drawing.Size(69, 31);
+            this.ToNum.TabIndex = 15;
+            this.ToNum.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // ToCheck
+            // 
+            this.ToCheck.AutoSize = true;
+            this.ToCheck.Location = new System.Drawing.Point(249, 31);
+            this.ToCheck.Name = "ToCheck";
+            this.ToCheck.Size = new System.Drawing.Size(88, 29);
+            this.ToCheck.TabIndex = 14;
+            this.ToCheck.Text = "To EP.";
+            this.ToCheck.UseVisualStyleBackColor = true;
+            this.ToCheck.CheckedChanged += new System.EventHandler(this.ToCheck_CheckedChanged);
+            // 
+            // FromNum
+            // 
+            this.FromNum.Enabled = false;
+            this.FromNum.Location = new System.Drawing.Point(140, 30);
+            this.FromNum.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.FromNum.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.FromNum.Name = "FromNum";
+            this.FromNum.Size = new System.Drawing.Size(69, 31);
+            this.FromNum.TabIndex = 12;
+            this.FromNum.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // FromCheck
+            // 
+            this.FromCheck.AutoSize = true;
+            this.FromCheck.Location = new System.Drawing.Point(25, 31);
+            this.FromCheck.Name = "FromCheck";
+            this.FromCheck.Size = new System.Drawing.Size(109, 29);
+            this.FromCheck.TabIndex = 11;
+            this.FromCheck.Text = "From EP.";
+            this.FromCheck.UseVisualStyleBackColor = true;
+            this.FromCheck.CheckedChanged += new System.EventHandler(this.FromCheck_CheckedChanged);
             // 
             // DownloadButton
             // 
@@ -177,7 +240,7 @@
             this.DownloadButton.Name = "DownloadButton";
             this.DownloadButton.Size = new System.Drawing.Size(75, 66);
             this.DownloadButton.TabIndex = 10;
-            this.DownloadButton.Text = "다운\r\n로드";
+            this.DownloadButton.Text = "Start";
             this.DownloadButton.UseVisualStyleBackColor = true;
             this.DownloadButton.Click += new System.EventHandler(this.DownloadButton_Click);
             // 
@@ -215,18 +278,18 @@
             this.ExtensionLabel.AutoSize = true;
             this.ExtensionLabel.Location = new System.Drawing.Point(20, 106);
             this.ExtensionLabel.Name = "ExtensionLabel";
-            this.ExtensionLabel.Size = new System.Drawing.Size(66, 25);
+            this.ExtensionLabel.Size = new System.Drawing.Size(69, 25);
             this.ExtensionLabel.TabIndex = 1;
-            this.ExtensionLabel.Text = "확장자";
+            this.ExtensionLabel.Text = "Format";
             // 
             // NovelNoLable
             // 
             this.NovelNoLable.AutoSize = true;
-            this.NovelNoLable.Location = new System.Drawing.Point(11, 70);
+            this.NovelNoLable.Location = new System.Drawing.Point(12, 70);
             this.NovelNoLable.Name = "NovelNoLable";
             this.NovelNoLable.Size = new System.Drawing.Size(84, 25);
             this.NovelNoLable.TabIndex = 0;
-            this.NovelNoLable.Text = "소설번호";
+            this.NovelNoLable.Text = "Novel ID";
             // 
             // ConsoleBox
             // 
@@ -242,15 +305,15 @@
             // ThreadLabel
             // 
             this.ThreadLabel.AutoSize = true;
-            this.ThreadLabel.Location = new System.Drawing.Point(18, 186);
+            this.ThreadLabel.Location = new System.Drawing.Point(121, 186);
             this.ThreadLabel.Name = "ThreadLabel";
-            this.ThreadLabel.Size = new System.Drawing.Size(108, 25);
+            this.ThreadLabel.Size = new System.Drawing.Size(82, 25);
             this.ThreadLabel.TabIndex = 11;
-            this.ThreadLabel.Text = "스레드 개수";
+            this.ThreadLabel.Text = "thread(s)";
             // 
             // ThreadNum
             // 
-            this.ThreadNum.Location = new System.Drawing.Point(132, 183);
+            this.ThreadNum.Location = new System.Drawing.Point(33, 183);
             this.ThreadNum.Minimum = new decimal(new int[] {
             1,
             0,
@@ -265,23 +328,14 @@
             0,
             0});
             // 
-            // IntervalLabel
-            // 
-            this.IntervalLabel.AutoSize = true;
-            this.IntervalLabel.Location = new System.Drawing.Point(268, 186);
-            this.IntervalLabel.Name = "IntervalLabel";
-            this.IntervalLabel.Size = new System.Drawing.Size(48, 25);
-            this.IntervalLabel.TabIndex = 13;
-            this.IntervalLabel.Text = "간격";
-            // 
             // SecondLabel
             // 
             this.SecondLabel.AutoSize = true;
-            this.SecondLabel.Location = new System.Drawing.Point(410, 186);
+            this.SecondLabel.Location = new System.Drawing.Point(336, 186);
             this.SecondLabel.Name = "SecondLabel";
-            this.SecondLabel.Size = new System.Drawing.Size(30, 25);
+            this.SecondLabel.Size = new System.Drawing.Size(103, 25);
             this.SecondLabel.TabIndex = 14;
-            this.SecondLabel.Text = "초";
+            this.SecondLabel.Text = "sec interval";
             // 
             // IntervalNum
             // 
@@ -291,7 +345,7 @@
             0,
             0,
             65536});
-            this.IntervalNum.Location = new System.Drawing.Point(322, 183);
+            this.IntervalNum.Location = new System.Drawing.Point(248, 183);
             this.IntervalNum.Maximum = new decimal(new int[] {
             5,
             0,
@@ -301,92 +355,6 @@
             this.IntervalNum.Size = new System.Drawing.Size(82, 31);
             this.IntervalNum.TabIndex = 15;
             // 
-            // FromCheck
-            // 
-            this.FromCheck.AutoSize = true;
-            this.FromCheck.Location = new System.Drawing.Point(25, 35);
-            this.FromCheck.Name = "FromCheck";
-            this.FromCheck.Size = new System.Drawing.Size(22, 21);
-            this.FromCheck.TabIndex = 11;
-            this.FromCheck.UseVisualStyleBackColor = true;
-            this.FromCheck.CheckedChanged += new System.EventHandler(this.FromCheck_CheckedChanged);
-            // 
-            // FromNum
-            // 
-            this.FromNum.Enabled = false;
-            this.FromNum.Location = new System.Drawing.Point(53, 30);
-            this.FromNum.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.FromNum.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.FromNum.Name = "FromNum";
-            this.FromNum.Size = new System.Drawing.Size(69, 31);
-            this.FromNum.TabIndex = 12;
-            this.FromNum.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            // 
-            // FromLabel
-            // 
-            this.FromLabel.AutoSize = true;
-            this.FromLabel.Enabled = false;
-            this.FromLabel.Location = new System.Drawing.Point(128, 33);
-            this.FromLabel.Name = "FromLabel";
-            this.FromLabel.Size = new System.Drawing.Size(66, 25);
-            this.FromLabel.TabIndex = 13;
-            this.FromLabel.Text = "장부터";
-            // 
-            // ToLabel
-            // 
-            this.ToLabel.AutoSize = true;
-            this.ToLabel.Enabled = false;
-            this.ToLabel.Location = new System.Drawing.Point(352, 33);
-            this.ToLabel.Name = "ToLabel";
-            this.ToLabel.Size = new System.Drawing.Size(66, 25);
-            this.ToLabel.TabIndex = 16;
-            this.ToLabel.Text = "장까지";
-            // 
-            // ToNum
-            // 
-            this.ToNum.Enabled = false;
-            this.ToNum.Location = new System.Drawing.Point(277, 30);
-            this.ToNum.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.ToNum.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.ToNum.Name = "ToNum";
-            this.ToNum.Size = new System.Drawing.Size(69, 31);
-            this.ToNum.TabIndex = 15;
-            this.ToNum.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            // 
-            // ToCheck
-            // 
-            this.ToCheck.AutoSize = true;
-            this.ToCheck.Location = new System.Drawing.Point(249, 35);
-            this.ToCheck.Name = "ToCheck";
-            this.ToCheck.Size = new System.Drawing.Size(22, 21);
-            this.ToCheck.TabIndex = 14;
-            this.ToCheck.UseVisualStyleBackColor = true;
-            this.ToCheck.CheckedChanged += new System.EventHandler(this.ToCheck_CheckedChanged);
-            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
@@ -394,7 +362,6 @@
             this.ClientSize = new System.Drawing.Size(890, 387);
             this.Controls.Add(this.IntervalNum);
             this.Controls.Add(this.SecondLabel);
-            this.Controls.Add(this.IntervalLabel);
             this.Controls.Add(this.ThreadNum);
             this.Controls.Add(this.ThreadLabel);
             this.Controls.Add(this.ConsoleBox);
@@ -413,10 +380,10 @@
             this.LoginGroup.PerformLayout();
             this.DownloadGroup.ResumeLayout(false);
             this.DownloadGroup.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.IntervalNum)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -443,13 +410,10 @@
         private System.Windows.Forms.TextBox ConsoleBox;
         private System.Windows.Forms.Label ThreadLabel;
         private System.Windows.Forms.NumericUpDown ThreadNum;
-        private System.Windows.Forms.Label IntervalLabel;
         private System.Windows.Forms.Label SecondLabel;
         private System.Windows.Forms.NumericUpDown IntervalNum;
         private System.Windows.Forms.NumericUpDown FromNum;
         private System.Windows.Forms.CheckBox FromCheck;
-        private System.Windows.Forms.Label FromLabel;
-        private System.Windows.Forms.Label ToLabel;
         private System.Windows.Forms.NumericUpDown ToNum;
         private System.Windows.Forms.CheckBox ToCheck;
     }
