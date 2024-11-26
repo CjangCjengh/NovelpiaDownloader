@@ -202,6 +202,7 @@ namespace NovelpiaDownloader
                                         }
                                         continue;
                                     }
+                                    textStr = Regex.Replace(textStr, @"<p style='height: 0px; width: 0px;.+?>.*?</p>", "");
                                     textStr = Regex.Replace(textStr, @"</?[^>]+>|\n", "");
                                     if (textStr == "")
                                         continue;
@@ -263,6 +264,7 @@ namespace NovelpiaDownloader
                                     var textDict = (Dictionary<string, object>)text;
                                     string textStr = (string)textDict["text"];
                                     textStr = Regex.Replace(textStr, @"<img.+?>", "");
+                                    textStr = Regex.Replace(textStr, @"<p style='height: 0px; width: 0px;.+?>.*?</p>", "");
                                     textStr = Regex.Replace(textStr, @"</?[^>]+>|\n", "");
                                     if (textStr == "" || textStr.Contains("cover-wrapper"))
                                         continue;
