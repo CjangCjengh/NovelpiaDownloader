@@ -28,6 +28,8 @@ namespace NovelpiaDownloader
                     ThreadNum.Value = config_dict["thread_num"];
                 if (config_dict.ContainsKey("interval_num"))
                     IntervalNum.Value = config_dict["interval_num"];
+                if (config_dict.ContainsKey("mapping_path"))
+                    font_mapping = new FontMapping(FontBox.Text = config_dict["mapping_path"]);
                 if (config_dict.ContainsKey("email") && config_dict.ContainsKey("wd"))
                     if (novelpia.Login(EmailText.Text = config_dict["email"], PasswordText.Text = config_dict["wd"]))
                     {
@@ -43,6 +45,7 @@ namespace NovelpiaDownloader
         }
 
         readonly Novelpia novelpia;
+        private FontMapping font_mapping;
 
         private void DownloadButton_Click(object sender, EventArgs e)
         {
@@ -206,6 +209,8 @@ namespace NovelpiaDownloader
                                     textStr = Regex.Replace(textStr, @"</?[^>]+>|\n", "");
                                     if (textStr == "")
                                         continue;
+                                    if (font_mapping != null)
+                                        textStr = font_mapping.DecodeText(textStr);
                                     file.Write($"<p>{textStr}</p>\n");
                                 }
                             }
@@ -263,12 +268,16 @@ namespace NovelpiaDownloader
                                 {
                                     var textDict = (Dictionary<string, object>)text;
                                     string textStr = (string)textDict["text"];
+                                    if (textStr.Contains("cover-wrapper"))
+                                        continue;
                                     textStr = Regex.Replace(textStr, @"<img.+?>", "");
                                     textStr = Regex.Replace(textStr, @"<p style='height: 0px; width: 0px;.+?>.*?</p>", "");
                                     textStr = Regex.Replace(textStr, @"</?[^>]+>|\n", "");
-                                    if (textStr == "" || textStr.Contains("cover-wrapper"))
+                                    if (textStr == "")
                                         continue;
                                     textStr = HttpUtility.HtmlDecode(textStr);
+                                    if (font_mapping != null)
+                                        textStr = font_mapping.DecodeText(textStr);
                                     file.WriteLine(textStr);
                                 }
                             }
@@ -379,7 +388,8 @@ namespace NovelpiaDownloader
                 { "interval_num", IntervalNum.Value },
                 { "email", EmailText.Text },
                 { "wd", PasswordText.Text },
-                { "loginkey", LoginkeyText.Text }
+                { "loginkey", LoginkeyText.Text },
+                { "mapping_path", FontBox.Text }
             };
             using (StreamWriter sw = new StreamWriter("config.json"))
             {
@@ -395,6 +405,22 @@ namespace NovelpiaDownloader
         private void ToCheck_CheckedChanged(object sender, EventArgs e)
         {
             ToNum.Enabled = ToLabel.Enabled = ToCheck.Checked;
+        }
+
+        private void FontButton_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog
+            {
+                Filter = "|*.json"
+            };
+            if (ofd.ShowDialog() == DialogResult.OK)
+                font_mapping = new FontMapping(FontBox.Text = ofd.FileName);
+        }
+
+        private void FontBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == '\r')
+                font_mapping = new FontMapping(FontBox.Text);
         }
     }
 }

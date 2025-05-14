@@ -39,6 +39,12 @@
             this.PasswordLabel = new System.Windows.Forms.Label();
             this.EmailLabel = new System.Windows.Forms.Label();
             this.DownloadGroup = new System.Windows.Forms.GroupBox();
+            this.ToLabel = new System.Windows.Forms.Label();
+            this.ToNum = new System.Windows.Forms.NumericUpDown();
+            this.ToCheck = new System.Windows.Forms.CheckBox();
+            this.FromLabel = new System.Windows.Forms.Label();
+            this.FromNum = new System.Windows.Forms.NumericUpDown();
+            this.FromCheck = new System.Windows.Forms.CheckBox();
             this.DownloadButton = new System.Windows.Forms.Button();
             this.TxtButton = new System.Windows.Forms.RadioButton();
             this.EpubButton = new System.Windows.Forms.RadioButton();
@@ -51,18 +57,15 @@
             this.IntervalLabel = new System.Windows.Forms.Label();
             this.SecondLabel = new System.Windows.Forms.Label();
             this.IntervalNum = new System.Windows.Forms.NumericUpDown();
-            this.FromCheck = new System.Windows.Forms.CheckBox();
-            this.FromNum = new System.Windows.Forms.NumericUpDown();
-            this.FromLabel = new System.Windows.Forms.Label();
-            this.ToLabel = new System.Windows.Forms.Label();
-            this.ToNum = new System.Windows.Forms.NumericUpDown();
-            this.ToCheck = new System.Windows.Forms.CheckBox();
+            this.FontLabel = new System.Windows.Forms.Label();
+            this.FontButton = new System.Windows.Forms.Button();
+            this.FontBox = new System.Windows.Forms.TextBox();
             this.LoginGroup.SuspendLayout();
             this.DownloadGroup.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.IntervalNum)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).BeginInit();
             this.SuspendLayout();
             // 
             // LoginGroup
@@ -164,12 +167,98 @@
             this.DownloadGroup.Controls.Add(this.NovelNoText);
             this.DownloadGroup.Controls.Add(this.ExtensionLabel);
             this.DownloadGroup.Controls.Add(this.NovelNoLable);
-            this.DownloadGroup.Location = new System.Drawing.Point(13, 214);
+            this.DownloadGroup.Location = new System.Drawing.Point(13, 251);
             this.DownloadGroup.Name = "DownloadGroup";
             this.DownloadGroup.Size = new System.Drawing.Size(439, 152);
             this.DownloadGroup.TabIndex = 1;
             this.DownloadGroup.TabStop = false;
             this.DownloadGroup.Text = "다운로드";
+            // 
+            // ToLabel
+            // 
+            this.ToLabel.AutoSize = true;
+            this.ToLabel.Enabled = false;
+            this.ToLabel.Location = new System.Drawing.Point(352, 33);
+            this.ToLabel.Name = "ToLabel";
+            this.ToLabel.Size = new System.Drawing.Size(66, 25);
+            this.ToLabel.TabIndex = 16;
+            this.ToLabel.Text = "장까지";
+            // 
+            // ToNum
+            // 
+            this.ToNum.Enabled = false;
+            this.ToNum.Location = new System.Drawing.Point(277, 30);
+            this.ToNum.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.ToNum.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ToNum.Name = "ToNum";
+            this.ToNum.Size = new System.Drawing.Size(69, 31);
+            this.ToNum.TabIndex = 15;
+            this.ToNum.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // ToCheck
+            // 
+            this.ToCheck.AutoSize = true;
+            this.ToCheck.Location = new System.Drawing.Point(249, 35);
+            this.ToCheck.Name = "ToCheck";
+            this.ToCheck.Size = new System.Drawing.Size(22, 21);
+            this.ToCheck.TabIndex = 14;
+            this.ToCheck.UseVisualStyleBackColor = true;
+            this.ToCheck.CheckedChanged += new System.EventHandler(this.ToCheck_CheckedChanged);
+            // 
+            // FromLabel
+            // 
+            this.FromLabel.AutoSize = true;
+            this.FromLabel.Enabled = false;
+            this.FromLabel.Location = new System.Drawing.Point(128, 33);
+            this.FromLabel.Name = "FromLabel";
+            this.FromLabel.Size = new System.Drawing.Size(66, 25);
+            this.FromLabel.TabIndex = 13;
+            this.FromLabel.Text = "장부터";
+            // 
+            // FromNum
+            // 
+            this.FromNum.Enabled = false;
+            this.FromNum.Location = new System.Drawing.Point(53, 30);
+            this.FromNum.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.FromNum.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.FromNum.Name = "FromNum";
+            this.FromNum.Size = new System.Drawing.Size(69, 31);
+            this.FromNum.TabIndex = 12;
+            this.FromNum.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // FromCheck
+            // 
+            this.FromCheck.AutoSize = true;
+            this.FromCheck.Location = new System.Drawing.Point(25, 35);
+            this.FromCheck.Name = "FromCheck";
+            this.FromCheck.Size = new System.Drawing.Size(22, 21);
+            this.FromCheck.TabIndex = 11;
+            this.FromCheck.UseVisualStyleBackColor = true;
+            this.FromCheck.CheckedChanged += new System.EventHandler(this.FromCheck_CheckedChanged);
             // 
             // DownloadButton
             // 
@@ -236,13 +325,13 @@
             this.ConsoleBox.Name = "ConsoleBox";
             this.ConsoleBox.ReadOnly = true;
             this.ConsoleBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ConsoleBox.Size = new System.Drawing.Size(420, 343);
+            this.ConsoleBox.Size = new System.Drawing.Size(420, 380);
             this.ConsoleBox.TabIndex = 5;
             // 
             // ThreadLabel
             // 
             this.ThreadLabel.AutoSize = true;
-            this.ThreadLabel.Location = new System.Drawing.Point(18, 186);
+            this.ThreadLabel.Location = new System.Drawing.Point(18, 223);
             this.ThreadLabel.Name = "ThreadLabel";
             this.ThreadLabel.Size = new System.Drawing.Size(108, 25);
             this.ThreadLabel.TabIndex = 11;
@@ -250,7 +339,7 @@
             // 
             // ThreadNum
             // 
-            this.ThreadNum.Location = new System.Drawing.Point(132, 183);
+            this.ThreadNum.Location = new System.Drawing.Point(132, 220);
             this.ThreadNum.Minimum = new decimal(new int[] {
             1,
             0,
@@ -268,7 +357,7 @@
             // IntervalLabel
             // 
             this.IntervalLabel.AutoSize = true;
-            this.IntervalLabel.Location = new System.Drawing.Point(268, 186);
+            this.IntervalLabel.Location = new System.Drawing.Point(268, 223);
             this.IntervalLabel.Name = "IntervalLabel";
             this.IntervalLabel.Size = new System.Drawing.Size(48, 25);
             this.IntervalLabel.TabIndex = 13;
@@ -277,7 +366,7 @@
             // SecondLabel
             // 
             this.SecondLabel.AutoSize = true;
-            this.SecondLabel.Location = new System.Drawing.Point(410, 186);
+            this.SecondLabel.Location = new System.Drawing.Point(410, 223);
             this.SecondLabel.Name = "SecondLabel";
             this.SecondLabel.Size = new System.Drawing.Size(30, 25);
             this.SecondLabel.TabIndex = 14;
@@ -291,7 +380,7 @@
             0,
             0,
             65536});
-            this.IntervalNum.Location = new System.Drawing.Point(322, 183);
+            this.IntervalNum.Location = new System.Drawing.Point(322, 220);
             this.IntervalNum.Maximum = new decimal(new int[] {
             5,
             0,
@@ -301,97 +390,41 @@
             this.IntervalNum.Size = new System.Drawing.Size(82, 31);
             this.IntervalNum.TabIndex = 15;
             // 
-            // FromCheck
+            // FontLabel
             // 
-            this.FromCheck.AutoSize = true;
-            this.FromCheck.Location = new System.Drawing.Point(25, 35);
-            this.FromCheck.Name = "FromCheck";
-            this.FromCheck.Size = new System.Drawing.Size(22, 21);
-            this.FromCheck.TabIndex = 11;
-            this.FromCheck.UseVisualStyleBackColor = true;
-            this.FromCheck.CheckedChanged += new System.EventHandler(this.FromCheck_CheckedChanged);
+            this.FontLabel.AutoSize = true;
+            this.FontLabel.Location = new System.Drawing.Point(19, 183);
+            this.FontLabel.Name = "FontLabel";
+            this.FontLabel.Size = new System.Drawing.Size(90, 25);
+            this.FontLabel.TabIndex = 16;
+            this.FontLabel.Text = "폰트 매핑";
             // 
-            // FromNum
+            // FontButton
             // 
-            this.FromNum.Enabled = false;
-            this.FromNum.Location = new System.Drawing.Point(53, 30);
-            this.FromNum.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.FromNum.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.FromNum.Name = "FromNum";
-            this.FromNum.Size = new System.Drawing.Size(69, 31);
-            this.FromNum.TabIndex = 12;
-            this.FromNum.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.FontButton.Location = new System.Drawing.Point(365, 177);
+            this.FontButton.Name = "FontButton";
+            this.FontButton.Size = new System.Drawing.Size(75, 36);
+            this.FontButton.TabIndex = 9;
+            this.FontButton.Text = "열기";
+            this.FontButton.UseVisualStyleBackColor = true;
+            this.FontButton.Click += new System.EventHandler(this.FontButton_Click);
             // 
-            // FromLabel
+            // FontBox
             // 
-            this.FromLabel.AutoSize = true;
-            this.FromLabel.Enabled = false;
-            this.FromLabel.Location = new System.Drawing.Point(128, 33);
-            this.FromLabel.Name = "FromLabel";
-            this.FromLabel.Size = new System.Drawing.Size(66, 25);
-            this.FromLabel.TabIndex = 13;
-            this.FromLabel.Text = "장부터";
-            // 
-            // ToLabel
-            // 
-            this.ToLabel.AutoSize = true;
-            this.ToLabel.Enabled = false;
-            this.ToLabel.Location = new System.Drawing.Point(352, 33);
-            this.ToLabel.Name = "ToLabel";
-            this.ToLabel.Size = new System.Drawing.Size(66, 25);
-            this.ToLabel.TabIndex = 16;
-            this.ToLabel.Text = "장까지";
-            // 
-            // ToNum
-            // 
-            this.ToNum.Enabled = false;
-            this.ToNum.Location = new System.Drawing.Point(277, 30);
-            this.ToNum.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.ToNum.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.ToNum.Name = "ToNum";
-            this.ToNum.Size = new System.Drawing.Size(69, 31);
-            this.ToNum.TabIndex = 15;
-            this.ToNum.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            // 
-            // ToCheck
-            // 
-            this.ToCheck.AutoSize = true;
-            this.ToCheck.Location = new System.Drawing.Point(249, 35);
-            this.ToCheck.Name = "ToCheck";
-            this.ToCheck.Size = new System.Drawing.Size(22, 21);
-            this.ToCheck.TabIndex = 14;
-            this.ToCheck.UseVisualStyleBackColor = true;
-            this.ToCheck.CheckedChanged += new System.EventHandler(this.ToCheck_CheckedChanged);
+            this.FontBox.Location = new System.Drawing.Point(115, 180);
+            this.FontBox.Name = "FontBox";
+            this.FontBox.Size = new System.Drawing.Size(244, 31);
+            this.FontBox.TabIndex = 8;
+            this.FontBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.FontBox_KeyPress);
             // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(890, 387);
+            this.ClientSize = new System.Drawing.Size(890, 424);
+            this.Controls.Add(this.FontButton);
+            this.Controls.Add(this.FontLabel);
+            this.Controls.Add(this.FontBox);
             this.Controls.Add(this.IntervalNum);
             this.Controls.Add(this.SecondLabel);
             this.Controls.Add(this.IntervalLabel);
@@ -413,10 +446,10 @@
             this.LoginGroup.PerformLayout();
             this.DownloadGroup.ResumeLayout(false);
             this.DownloadGroup.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.IntervalNum)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.FromNum)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.ToNum)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -452,6 +485,9 @@
         private System.Windows.Forms.Label ToLabel;
         private System.Windows.Forms.NumericUpDown ToNum;
         private System.Windows.Forms.CheckBox ToCheck;
+        private System.Windows.Forms.Label FontLabel;
+        private System.Windows.Forms.Button FontButton;
+        private System.Windows.Forms.TextBox FontBox;
     }
 }
 
