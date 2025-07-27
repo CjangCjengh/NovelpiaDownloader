@@ -42,6 +42,9 @@ namespace NovelpiaDownloader
                         ConsoleBox.Text += "로그인 실패!\r\n";
                 if (config_dict.ContainsKey("loginkey"))
                     novelpia.loginkey = LoginkeyText.Text = config_dict["loginkey"];
+                // Load the state of the new HtmlCheckBox from config
+                if (config_dict.ContainsKey("include_html_in_txt"))
+                    HtmlCheckBox.Checked = config_dict["include_html_in_txt"];
             }
         }
 
@@ -114,6 +117,8 @@ namespace NovelpiaDownloader
 
                 if (saveAsEpub)
                 {
+                    // This entire block handles EPUB creation.
+                    // The HtmlCheckBox state is NOT used here.
                     Directory.CreateDirectory(Path.Combine(directory, "META-INF"));
                     Directory.CreateDirectory(Path.Combine(directory, "OEBPS/Styles"));
                     Directory.CreateDirectory(Path.Combine(directory, "OEBPS/Text"));
@@ -154,10 +159,9 @@ namespace NovelpiaDownloader
 
                     var synopsisMatch = Regex.Match(responseText, @"<div class=""synopsis"">(.*?)</div>", RegexOptions.Singleline);
                     string synopsis = synopsisMatch.Success ? HttpUtility.HtmlDecode(synopsisMatch.Groups[1].Value.Trim()) : "No synopsis available.";
-                    
-                    
-                    // For completion status
 
+
+                    // For completion status
                     string status = "";
                     var completionMatch = Regex.Match(responseText, @"<span class=""b_comp s_inv"">(.+?)</span>");
                     if (completionMatch.Success)
@@ -172,8 +176,6 @@ namespace NovelpiaDownloader
                             status = "연재중단";
                         }
                     }
-
-
 
                     match = Regex.Match(responseText, @"href=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
                     string url = match.Groups[1].Value;
@@ -243,13 +245,13 @@ namespace NovelpiaDownloader
                                     var textDict = (Dictionary<string, object>)text;
                                     string textStr = (string)textDict["text"];
 
-                                    // Decode HTML entities from the source text
+                                    // Decode HTML entities from the source text (e.g., &lt; becomes <)
                                     textStr = HttpUtility.HtmlDecode(textStr);
 
-                                    // Remove specific id attributes 
+                                    // Remove specific id attributes (often added by content editors and not part of desired raw HTML)
                                     textStr = Regex.Replace(textStr, @"\sid=""docs-internal-guid-[^""]*""", "");
 
-                                    // Remove empty paragraph tags with specific styles (often used for spacing)
+                                    // Remove empty paragraph tags with specific styles (often used for spacing, not content)
                                     textStr = Regex.Replace(textStr, @"<p style='height: 0px; width: 0px;.+?>.*?</p>", "");
 
                                     // Handle image tags: replace with EPUB-friendly img tags and download image
@@ -306,7 +308,7 @@ namespace NovelpiaDownloader
                                                     // This regex encodes everything EXCEPT existing HTML tags (<...>) or HTML entities (&...).
                                                     // It captures either a tag (Group 1) or non-< characters (Group 2).
                                                     string encodedLine = Regex.Replace(line, "(<[^>]+>|&[^;]+;)|([^<>&]+)",
-                                                                        m => m.Groups[1].Success ? m.Value : HttpUtility.HtmlEncode(m.Groups[2].Value));
+                                                                         m => m.Groups[1].Success ? m.Value : HttpUtility.HtmlEncode(m.Groups[2].Value));
                                                     file.Write($"<p>{encodedLine}</p>\n");
                                                 }
                                             }
@@ -333,6 +335,8 @@ namespace NovelpiaDownloader
                             file.Write($"<dc:subject>{HttpUtility.HtmlEncode(status)}</dc:subject>\n");
                         }
                         file.Write(EpubTemplate.content2);
+                        file.Write("<item id=\"cover.html\" href=\"Text/cover.html\" media-type=\"application/xhtml+xml\"/>\n"); // Add cover.html to manifest
+                        file.Write("<item id=\"cover-image\" href=\"Images/cover.jpg\" media-type=\"image/jpeg\" properties=\"cover-image\"/>\n"); // Add cover image to manifest
                         for (int i = 0; i < chapterNames.Count; i++)
                         {
                             string temp = Path.ChangeExtension(Path.GetFileName(chapterNames[i].Item2), "html");
@@ -360,14 +364,34 @@ namespace NovelpiaDownloader
 
                     ZipFile.CreateFromDirectory(directory, path);
                 }
-                else
+                else // Save as .txt
                 {
+                    // Get the state of the new checkbox
+                    bool includeHtml = false;
+                    Invoke(new Action(() => includeHtml = HtmlCheckBox.Checked)); // Access on UI thread
+
                     using (var file = new StreamWriter(path, false))
                     {
                         var serializer = new JavaScriptSerializer();
+
+                        // --- START MODIFICATION FOR FULL HTML IN TXT ---
+                        if (includeHtml)
+                        {
+                            // Write the HTML header for the .txt file
+                            file.Write(EpubTemplate.chapter); // This includes <html>, <head>, <body>, CSS links
+                            file.Write($"<h1>{chapterNames[0].Item1}</h1>\n<p>&nbsp;</p>\n"); // Use the first chapter name as the main title for the single HTML file
+                        }
+                        // --- END MODIFICATION FOR FULL HTML IN TXT ---
+
                         chapterNames.ForEach(s =>
                         {
-                            file.Write($"{s.Item1}\n\n");
+                            // If including HTML, the chapter name is already handled by the <h1> tag above or will be part of the raw content.
+                            // If not including HTML, we still want the chapter name as plain text.
+                            if (!includeHtml)
+                            {
+                                file.Write($"{s.Item1}\n\n"); // Writes chapter name + two newlines for plain text mode
+                            }
+
                             if (!File.Exists(s.Item2))
                                 return;
                             using (var reader = new StreamReader(s.Item2, Encoding.UTF8))
@@ -379,19 +403,82 @@ namespace NovelpiaDownloader
                                     string textStr = (string)textDict["text"];
                                     if (textStr.Contains("cover-wrapper"))
                                         continue;
-                                    textStr = Regex.Replace(textStr, @"<img.+?>", "");
+
+                                    // Decode HTML entities from the source text (e.g., &lt; becomes <, &amp; becomes &)
+                                    // This is crucial to expose actual HTML tags for potential stripping, or to keep them as raw HTML.
+                                    textStr = HttpUtility.HtmlDecode(textStr);
+
+                                    // Remove empty paragraph tags with specific styles (often used for spacing, not content)
                                     textStr = Regex.Replace(textStr, @"<p style='height: 0px; width: 0px;.+?>.*?</p>", "");
-                                    textStr = Regex.Replace(textStr, @"</?[^>]+>|\n", "");
-                                    if (textStr == "")
+
+                                    // --- IMPORTANT: This block controls HTML and newline stripping for TXT files ---
+                                    // If HtmlCheckBox is checked (includeHtml is true), this block is SKIPPED,
+                                    // preserving all HTML tags (like <b>, <i>, <p>) and original newlines in textStr.
+                                    // If HtmlCheckBox is NOT checked (includeHtml is false), this block executes,
+                                    // stripping all HTML tags and newline characters to produce plain text.
+                                    if (!includeHtml)
+                                    {
+                                        textStr = Regex.Replace(textStr, @"</?[^>]+>|\n", "");
+                                    }
+                                    // --- END IMPORTANT MODIFICATION ---
+
+                                    if (string.IsNullOrEmpty(textStr.Trim())) // Use Trim() to handle whitespace-only strings
+                                    {
+                                        if (includeHtml) file.Write("<p>&nbsp;</p>\n"); // Preserve blank lines as HTML paragraphs
                                         continue;
+                                    }
                                     if (font_mapping != null)
                                         textStr = font_mapping.DecodeText(textStr);
-                                    file.WriteLine(textStr);
+
+                                    // If including HTML, write the raw text string. Otherwise, write a line.
+                                    if (includeHtml)
+                                    {
+                                        // For raw HTML, we need to ensure each 'text' block from JSON is treated as a paragraph
+                                        // unless it already contains paragraph tags.
+                                        bool alreadyContainsParagraphs = Regex.IsMatch(textStr, @"<p\b[^>]*>.*?</p>", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+                                        if (alreadyContainsParagraphs)
+                                        {
+                                            file.Write($"{textStr}\n");
+                                        }
+                                        else
+                                        {
+                                            // Split by newlines and wrap each line in a <p> tag, re-encoding only plain text parts
+                                            string[] lines = textStr.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
+                                            foreach (string line in lines)
+                                            {
+                                                string trimmedLine = line.Trim();
+                                                if (string.IsNullOrEmpty(trimmedLine))
+                                                {
+                                                    file.Write("<p>&nbsp;</p>\n");
+                                                }
+                                                else
+                                                {
+                                                    string encodedLine = Regex.Replace(line, "(<[^>]+>|&[^;]+;)|([^<>&]+)",
+                                                                         m => m.Groups[1].Success ? m.Value : HttpUtility.HtmlEncode(m.Groups[2].Value));
+                                                    file.Write($"<p>{encodedLine}</p>\n");
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        file.WriteLine(textStr);
+                                    }
                                 }
                             }
-                            file.Write("\n");
+                            // Add an extra newline after each chapter in plain text mode.
+                            // In HTML mode, the <p>&nbsp;</p> and subsequent chapter <h1> handles spacing.
+                            if (!includeHtml) file.Write("\n");
                             File.Delete(s.Item2);
                         });
+
+                        // --- START MODIFICATION FOR FULL HTML IN TXT ---
+                        if (includeHtml)
+                        {
+                            // Write the HTML footer for the .txt file
+                            file.Write("</body>\n</html>\n");
+                        }
+                        // --- END MODIFICATION FOR FULL HTML IN TXT ---
                     }
                 }
                 Directory.Delete(directory, true);
@@ -497,7 +584,8 @@ namespace NovelpiaDownloader
                 { "email", EmailText.Text },
                 { "wd", PasswordText.Text },
                 { "loginkey", LoginkeyText.Text },
-                { "mapping_path", FontBox.Text }
+                { "mapping_path", FontBox.Text },
+                { "include_html_in_txt", HtmlCheckBox.Checked } // Save the state of the new checkbox
             };
             using (StreamWriter sw = new StreamWriter("config.json"))
             {
@@ -536,100 +624,102 @@ namespace NovelpiaDownloader
 
         }
 
- 
+        // Event handler for HtmlCheckBox (no specific logic needed here for the current requirement)
+        private void HtmlCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            // This event handler is triggered when the checkbox state changes.
+            // No direct action is needed here for the "include HTML in TXT" functionality,
+            // as the checkbox state is read directly within the Download method.
+        }
 
         private void BatchDownloadButton_Click(object sender, EventArgs e)
         {
-                // Prompt user to select the text file containing the novel list
-                OpenFileDialog openFileDialog = new OpenFileDialog
-                {
-                    Filter = "Text files|*.txt",
-                    Title = "Select the Novel List File"
-                };
-
-                if (openFileDialog.ShowDialog() != DialogResult.OK)
-                {
-                    return; // User cancelled
-                }
-
-                string listFilePath = openFileDialog.FileName;
-
-                // Prompt user to select the output directory
-                FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog
-                {
-                    Description = "Select the output directory for downloaded novels"
-                };
-
-                if (folderBrowserDialog.ShowDialog() != DialogResult.OK)
-                {
-                    return; // User cancelled
-                }
-
-                string outputDirectory = folderBrowserDialog.SelectedPath;
-                bool saveAsEpub = EpubButton.Checked; // Use existing EpubButton state
-
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        Invoke(new Action(() => ConsoleBox.AppendText($"Starting batch download from: {listFilePath}\r\n")));
-                        string[] lines = File.ReadAllLines(listFilePath);
-
-                        foreach (string line in lines)
-                        {
-                            string trimmedLine = line.Trim();
-                            if (string.IsNullOrEmpty(trimmedLine))
-                            {
-                                continue; // Skip empty lines
-                            }
-
-                            string[] parts = trimmedLine.Split(',');
-                            if (parts.Length == 2)
-                            {
-                                string title = parts[0].Trim();
-                                string novelId = parts[1].Trim();
-
-                                // Sanitize title for filename usage
-                                string safeTitle = SanitizeFilename(title);
-
-                                string fileExtension = saveAsEpub ? ".epub" : ".txt";
-                                string outputPath = Path.Combine(outputDirectory, $"{safeTitle}{fileExtension}");
-
-                                Invoke(new Action(() => ConsoleBox.AppendText($"Attempting to download '{title}' (ID: {novelId})\r\n")));
-                                // Call the existing Download method
-                                Download(novelId, saveAsEpub, outputPath);
-                                // Add a small delay between each novel download to be polite to the server
-                                Thread.Sleep(2000); // 2 seconds delay
-                            }
-                            else
-                            {
-                                Invoke(new Action(() => ConsoleBox.AppendText($"Skipping malformed line: {trimmedLine}\r\n")));
-                            }
-                        }
-                        Invoke(new Action(() => ConsoleBox.AppendText("Batch download completed!\r\n")));
-                    }
-                    catch (Exception ex)
-                    {
-                        Invoke(new Action(() => ConsoleBox.AppendText($"An error occurred during batch download: {ex.Message}\r\n")));
-                    }
-                });
-            }
-
-            /// <summary>
-            /// Sanitizes a string to be used as a valid filename.
-            /// Removes invalid characters and replaces them with a safe alternative.
-            /// </summary>
-            /// <param name="filename">The original string.</param>
-            /// <returns>A sanitized string suitable for a filename.</returns>
-            private string SanitizeFilename(string filename)
+            // Prompt user to select the text file containing the novel list
+            OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                string invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
-                string invalidRegStr = string.Format(@"[{0}]", invalidChars);
-                return Regex.Replace(filename, invalidRegStr, "_"); // Replace invalid characters with underscore
+                Filter = "Text files|*.txt",
+                Title = "Select the Novel List File"
+            };
+
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
+            {
+                return; // User cancelled
             }
 
-            // --- NEW CODE END ---
+            string listFilePath = openFileDialog.FileName;
 
+            // Prompt user to select the output directory
+            FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog
+            {
+                Description = "Select the output directory for downloaded novels"
+            };
+
+            if (folderBrowserDialog.ShowDialog() != DialogResult.OK)
+            {
+                return; // User cancelled
+            }
+
+            string outputDirectory = folderBrowserDialog.SelectedPath;
+            bool saveAsEpub = EpubButton.Checked; // Use existing EpubButton state
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    Invoke(new Action(() => ConsoleBox.AppendText($"Starting batch download from: {listFilePath}\r\n")));
+                    string[] lines = File.ReadAllLines(listFilePath);
+
+                    foreach (string line in lines)
+                    {
+                        string trimmedLine = line.Trim();
+                        if (string.IsNullOrEmpty(trimmedLine))
+                        {
+                            continue; // Skip empty lines
+                        }
+
+                        string[] parts = trimmedLine.Split(',');
+                        if (parts.Length == 2)
+                        {
+                            string title = parts[0].Trim();
+                            string novelId = parts[1].Trim();
+
+                            // Sanitize title for filename usage
+                            string safeTitle = SanitizeFilename(title);
+
+                            string fileExtension = saveAsEpub ? ".epub" : ".txt";
+                            string outputPath = Path.Combine(outputDirectory, $"{safeTitle}{fileExtension}");
+
+                            Invoke(new Action(() => ConsoleBox.AppendText($"Attempting to download '{title}' (ID: {novelId})\r\n")));
+                            // Call the existing Download method
+                            Download(novelId, saveAsEpub, outputPath);
+                            // Add a small delay between each novel download to be polite to the server
+                            Thread.Sleep(2000); // 2 seconds delay
+                        }
+                        else
+                        {
+                            Invoke(new Action(() => ConsoleBox.AppendText($"Skipping malformed line: {trimmedLine}\r\n")));
+                        }
+                    }
+                    Invoke(new Action(() => ConsoleBox.AppendText("Batch download completed!\r\n")));
+                }
+                catch (Exception ex)
+                {
+                    Invoke(new Action(() => ConsoleBox.AppendText($"An error occurred during batch download: {ex.Message}\r\n")));
+                }
+            });
         }
-   }
 
+        /// <summary>
+        /// Sanitizes a string to be used as a valid filename.
+        /// Removes invalid characters and replaces them with a safe alternative.
+        /// </summary>
+        /// <param name="filename">The original string.</param>
+        /// <returns>A sanitized string suitable for a filename.</returns>
+        private string SanitizeFilename(string filename)
+        {
+            string invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
+            string invalidRegStr = string.Format(@"[{0}]", invalidChars);
+            return Regex.Replace(filename, invalidRegStr, "_"); // Replace invalid characters with underscore
+        }
+    }
+}
