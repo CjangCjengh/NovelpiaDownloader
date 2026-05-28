@@ -492,21 +492,23 @@ namespace NovelpiaDownloader
             f.LoginkeyText.Location = new Point(loginInputX, 107);
             f.LoginkeyText.Size = new Size(loginInputW, 31);
 
-            // FontLabel/FontBox/FontButton 自适应
+            // FontLabel/FontBox/FontButton 自适应 (位于 DownloadGroup 下方, 底边与 ConsoleBox 对齐)
+            int fontRowY = f.DownloadGroup.Location.Y + f.DownloadGroup.Size.Height + 10;
             int fontLabRight = 19 + MeasureWidth(f.FontLabel, f.FontLabel.Text, 8);
             int fontBtnW = MeasureWidth(f.FontButton, f.FontButton.Text, 26);
             if (fontBtnW < 70) fontBtnW = 70;
             f.FontButton.Size = new Size(fontBtnW, 36);
-            int formClient = f.ClientSize.Width;
             int fontRightEdge = f.DownloadGroup.Location.X + f.DownloadGroup.Size.Width - 12;
-            f.FontButton.Location = new Point(fontRightEdge - fontBtnW, f.FontLabel.Location.Y - 6);
-            f.FontBox.Location = new Point(fontLabRight + 4, f.FontLabel.Location.Y - 3);
+            f.FontLabel.Location = new Point(19, fontRowY + 3);
+            f.FontButton.Location = new Point(fontRightEdge - fontBtnW, fontRowY);
+            f.FontBox.Location = new Point(fontLabRight + 4, fontRowY);
             f.FontBox.Size = new Size(f.FontButton.Location.X - 6 - f.FontBox.Location.X, 31);
 
-            // 线程数 / 间隔 行
-            f.ThreadLabel.Location = new Point(18, 223);
+            // 线程数 / 间隔 行 (位于 LoginGroup 下方, DownloadGroup 上方)
+            int threadRowY = f.LoginGroup.Location.Y + f.LoginGroup.Size.Height + 9;
+            f.ThreadLabel.Location = new Point(18, threadRowY + 3);
             int thrLabRight = 18 + MeasureWidth(f.ThreadLabel, f.ThreadLabel.Text, 8);
-            f.ThreadNum.Location = new Point(thrLabRight + 4, 220);
+            f.ThreadNum.Location = new Point(thrLabRight + 4, threadRowY);
             f.ThreadNum.Size = new Size(70, 31);
             int thrNumRight = f.ThreadNum.Location.X + f.ThreadNum.Size.Width;
 
@@ -515,7 +517,7 @@ namespace NovelpiaDownloader
             if (showInterval)
             {
                 f.IntervalLabel.Visible = true;
-                f.IntervalLabel.Location = new Point(thrNumRight + 16, 223);
+                f.IntervalLabel.Location = new Point(thrNumRight + 16, threadRowY + 3);
                 intervalLabRight = f.IntervalLabel.Location.X + MeasureWidth(f.IntervalLabel, f.IntervalLabel.Text, 8);
             }
             else
@@ -523,9 +525,13 @@ namespace NovelpiaDownloader
                 f.IntervalLabel.Visible = false;
                 intervalLabRight = thrNumRight + 16;
             }
-            f.IntervalNum.Location = new Point(intervalLabRight + 4, 220);
+            f.IntervalNum.Location = new Point(intervalLabRight + 4, threadRowY);
             f.IntervalNum.Size = new Size(70, 31);
-            f.SecondLabel.Location = new Point(f.IntervalNum.Location.X + f.IntervalNum.Size.Width + 6, 223);
+            f.SecondLabel.Location = new Point(f.IntervalNum.Location.X + f.IntervalNum.Size.Width + 6, threadRowY + 3);
+
+            // 让 ConsoleBox 底边与 FontButton 底边对齐
+            int consoleBottom = fontRowY + f.FontButton.Size.Height;
+            f.ConsoleBox.Size = new Size(f.ConsoleBox.Size.Width, consoleBottom - f.ConsoleBox.Location.Y);
         }
     }
 }
