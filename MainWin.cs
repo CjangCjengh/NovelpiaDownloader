@@ -209,8 +209,8 @@ namespace NovelpiaDownloader
                     {
                         if (_cancelRequested) break;
                         string data = $"novel_no={novelNo}&sort=DOWN&page={page}";
-                        string resp = PostRequest("https://novelpia.com/proc/episode_list", "", data);
-                        var chapters = Regex.Matches(resp, @"id=""bookmark_(\d+)""></i>(.+?)</b>.+?>EP\.(\d+)<");
+                        string resp = PostRequest("https://novelpia.com/proc/episode_list", novelpia.loginkey, data, "https://novelpia.com/");
+                        var chapters = Regex.Matches(resp, @"id=""bookmark_(\d+)""></i>(.+?)</b>.+?>EP\.(\d+)<", RegexOptions.Singleline);
                         if (chapters.Count == 0)
                             break;
                         if (seenChapterIds.Contains(chapters[0].Groups[1].Value))
@@ -464,12 +464,11 @@ namespace NovelpiaDownloader
         {
             if (_cancelRequested || _hadFatalError) return;
             int retry = _retryCount;
-            string referer = $"https://novelpia.com/viewer/{chapterId}";
             for (int attempt = 0; attempt <= retry; attempt++)
             {
                 try
                 {
-                    string resp = PostRequest($"https://novelpia.com/proc/viewer_data/{chapterId}", novelpia.loginkey, null, referer);
+                    string resp = PostRequest($"https://novelpia.com/proc/viewer_data/{chapterId}", novelpia.loginkey, null, "https://novelpia.com/");
                     if (string.IsNullOrEmpty(resp) || resp.Contains("본인인증"))
                         throw new Exception();
                     using (var file = new StreamWriter(jsonPath, false))
@@ -559,18 +558,48 @@ namespace NovelpiaDownloader
 
         private void DownloadImage(string url, string path, string type)
         {
+            if (_cancelRequested || _hadFatalError) return;
             if (!url.StartsWith("http"))
                 url = "https:" + url;
-            Log(Lang.T("img_start", type, url));
-            try
+            int retry = _retryCount;
+            for (int attempt = 0; attempt <= retry; attempt++)
             {
-                using (var downloader = new WebClient())
-                    downloader.DownloadFile(url, path);
-                Log(Lang.T("img_done", type));
-            }
-            catch
-            {
-                Log(Lang.T("img_fail", type, url));
+                if (_cancelRequested || _hadFatalError) return;
+                Log(Lang.T("img_start", type, url));
+                try
+                {
+                    var request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = "GET";
+                    request.UserAgent = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36";
+                    request.Timeout = 30000;
+                    request.ReadWriteTimeout = 30000;
+                    using (var response = (HttpWebResponse)request.GetResponse())
+                    using (var src = response.GetResponseStream())
+                    using (var dst = new FileStream(path, FileMode.Create, FileAccess.Write))
+                    {
+                        if (src.CanTimeout) src.ReadTimeout = 30000;
+                        var buf = new byte[81920];
+                        int n;
+                        while ((n = src.Read(buf, 0, buf.Length)) > 0)
+                        {
+                            if (_cancelRequested || _hadFatalError) return;
+                            dst.Write(buf, 0, n);
+                        }
+                    }
+                    Log(Lang.T("img_done", type));
+                    return;
+                }
+                catch
+                {
+                    try { if (File.Exists(path)) File.Delete(path); } catch { }
+                    if (attempt < retry)
+                        Log(Lang.T("chapter_retry", attempt + 1, retry));
+                    else
+                    {
+                        Log(Lang.T("img_fail", type, url));
+                        if (_stopOnError) _hadFatalError = true;
+                    }
+                }
             }
         }
 
