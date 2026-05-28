@@ -550,7 +550,8 @@ namespace NovelpiaDownloader
             int desiredClientH = dlGroupY + dlGroupBottomInner + 12;
             int formExtraH = f.Height - f.ClientSize.Height;
             int desiredH = desiredClientH + formExtraH;
-            int desiredMinW = requiredW + (f.Width - f.ClientSize.Width);
+            int desiredMinW = outerPad + threadRowMinW + gap + threadRowMinW + outerPad + (f.Width - f.ClientSize.Width);
+            if (desiredMinW < 906) desiredMinW = 906;
             f.MinimumSize = new Size(desiredMinW, desiredH);
         }
 
