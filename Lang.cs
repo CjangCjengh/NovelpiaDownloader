@@ -402,6 +402,14 @@ namespace NovelpiaDownloader
             const int gap = 12;
             int totalW = f.ClientSize.Width;
             int leftHalf = (totalW - outerPad * 2 - gap) / 2;
+
+            // 计算线程/间隔/重试 一行的最小需求宽度,作为左半部分下限
+            int thrLabW = MeasureWidth(f.ThreadLabel, f.ThreadLabel.Text, 8);
+            int intLabW = MeasureWidth(f.IntervalLabel, f.IntervalLabel.Text, 8);
+            int retLabW = MeasureWidth(f.RetryLabel, f.RetryLabel.Text, 8);
+            // 18(左边) + thrLab + 4 + 70 + 16 + intLab + 4 + 70 + 16 + retLab + 4 + 70 + 18(右边)
+            int threadRowMinW = 18 + thrLabW + 4 + 70 + 16 + intLabW + 4 + 70 + 16 + retLabW + 4 + 70 + 18;
+            if (leftHalf < threadRowMinW) leftHalf = threadRowMinW;
             if (leftHalf < 360) leftHalf = 360;
             int rightX = outerPad + leftHalf + gap;
             int rightW = totalW - rightX - outerPad;
@@ -488,9 +496,8 @@ namespace NovelpiaDownloader
             f.DownloadButton.Size = new Size(dlBtnW, 36);
             f.DownloadButton.Location = new Point(outputRightEdge - dlBtnW, 230);
 
-            // 下载组高度: 最后一行 格式/下载按钮 底边 + 边距
+            // 下载组内部所需高度(最后一行 格式/下载按钮 底边 + 边距);实际 Size 在下方与可用高度取 max 后再设
             int dlGroupBottomInner = f.DownloadButton.Location.Y + f.DownloadButton.Size.Height + 18;
-            f.DownloadGroup.Size = new Size(f.DownloadGroup.Size.Width, dlGroupBottomInner);
 
             // LoginGroup 内: Email/Password 标签宽度根据文本测量
             int emailLabW = MeasureWidth(f.EmailLabel, f.EmailLabel.Text, 0);
@@ -533,6 +540,12 @@ namespace NovelpiaDownloader
             f.FontButton.Enabled = false;
 
             // 线程/间隔/重试 一行 (位于 FontLabel 下方, DownloadGroup 上方)
+            // 拉伸时 间隔 获得 1/6 平移, 重试 获得 1/3 平移 (以 threadRowMinW 为基线)
+            int extraW = leftHalf - threadRowMinW;
+            if (extraW < 0) extraW = 0;
+            int shift1 = extraW / 6;     // 间隔平移量
+            int shift2 = extraW / 3;     // 重试平移量 (在间隔已平移 1/6 的基础上, 再多平移 1/6)
+
             int threadRowY = fontRowY + f.FontButton.Size.Height + 6;
             f.ThreadLabel.Location = new Point(18, threadRowY + 3);
             int thrLabRight = 18 + MeasureWidth(f.ThreadLabel, f.ThreadLabel.Text, 8);
@@ -541,7 +554,7 @@ namespace NovelpiaDownloader
             int thrNumRight = f.ThreadNum.Location.X + f.ThreadNum.Size.Width;
 
             f.IntervalLabel.Visible = true;
-            f.IntervalLabel.Location = new Point(thrNumRight + 16, threadRowY + 3);
+            f.IntervalLabel.Location = new Point(thrNumRight + 16 + shift1, threadRowY + 3);
             int intervalLabRight = f.IntervalLabel.Location.X + MeasureWidth(f.IntervalLabel, f.IntervalLabel.Text, 8);
             f.IntervalNum.Location = new Point(intervalLabRight + 4, threadRowY);
             f.IntervalNum.Size = new Size(70, 31);
@@ -550,33 +563,38 @@ namespace NovelpiaDownloader
             // SecondLabel 隐藏(单位已合入 IntervalLabel)
             f.SecondLabel.Visible = false;
 
-            f.RetryLabel.Location = new Point(intervalNumRight + 16, threadRowY + 3);
+            // 重试总平移 shift2; 已从 intervalNumRight 继承 shift1, 还需额外 +shift2-shift1 才达到 shift2
+            f.RetryLabel.Location = new Point(intervalNumRight + 16 + (shift2 - shift1), threadRowY + 3);
             int retryLabRight = f.RetryLabel.Location.X + MeasureWidth(f.RetryLabel, f.RetryLabel.Text, 8);
             f.RetryNum.Location = new Point(retryLabRight + 4, threadRowY);
             f.RetryNum.Size = new Size(70, 31);
 
-            // DownloadGroup 位于线程行下方
+            // DownloadGroup 位于线程行下方, 底边随窗口拉伸
             int dlGroupY = threadRowY + 31 + 12;
             f.DownloadGroup.Location = new Point(f.DownloadGroup.Location.X, dlGroupY);
+            // 下载组高度 = max(内部需要高度, 可用高度)
+            int dlGroupAvailableH = f.ClientSize.Height - dlGroupY - 12;
+            int dlGroupH = dlGroupBottomInner > dlGroupAvailableH ? dlGroupBottomInner : dlGroupAvailableH;
+            f.DownloadGroup.Size = new Size(f.DownloadGroup.Size.Width, dlGroupH);
 
             // 让 ConsoleBox 顶边与 LanguageBox 同高, 底边与 DownloadGroup 底边对齐
             int consoleBottom = f.DownloadGroup.Location.Y + f.DownloadGroup.Size.Height;
             f.ConsoleBox.Size = new Size(f.ConsoleBox.Size.Width, consoleBottom - f.ConsoleBox.Location.Y);
 
             // 窗体高度限制(仅调整 MinimumSize, Height 交由 Apply 主动控制)
-            int desiredClientH = consoleBottom + 12;
+            // 最小高度 = 下载组内部需要高度 + 边距
+            int desiredClientH = dlGroupY + dlGroupBottomInner + 12;
             int formExtraH = f.Height - f.ClientSize.Height;
             int desiredH = desiredClientH + formExtraH;
-            if (f.MinimumSize.Height != 0)
-                f.MinimumSize = new Size(f.MinimumSize.Width, desiredH);
+            // 同时保证最小宽度 = 左半需求 + 右侧最小 + 边距
+            int desiredMinW = outerPad + threadRowMinW + gap + 200 + outerPad + (f.Width - f.ClientSize.Width);
+            f.MinimumSize = new Size(desiredMinW, desiredH);
         }
 
         // 计算当前语言下控件需要的最小窗体高度(供 Apply 在切语言后调用)
         public static int RequiredHeight(MainWin f)
         {
-            int consoleBottom = f.DownloadGroup.Location.Y + f.DownloadGroup.Size.Height;
-            int formExtraH = f.Height - f.ClientSize.Height;
-            return consoleBottom + 12 + formExtraH;
+            return f.MinimumSize.Height;
         }
     }
 }
