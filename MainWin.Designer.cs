@@ -39,6 +39,16 @@
             this.PasswordLabel = new System.Windows.Forms.Label();
             this.EmailLabel = new System.Windows.Forms.Label();
             this.DownloadGroup = new System.Windows.Forms.GroupBox();
+            this.DownloadImageCheck = new System.Windows.Forms.CheckBox();
+            this.CompressCheck = new System.Windows.Forms.CheckBox();
+            this.RetryNum = new System.Windows.Forms.NumericUpDown();
+            this.RetryLabel = new System.Windows.Forms.Label();
+            this.KeepHtmlCheck = new System.Windows.Forms.CheckBox();
+            this.RemoveBlankCheck = new System.Windows.Forms.CheckBox();
+            this.OutputDirButton = new System.Windows.Forms.Button();
+            this.OutputDirText = new System.Windows.Forms.TextBox();
+            this.OutputDirLabel = new System.Windows.Forms.Label();
+            this.NoticeCheck = new System.Windows.Forms.CheckBox();
             this.ToLabel = new System.Windows.Forms.Label();
             this.ToNum = new System.Windows.Forms.NumericUpDown();
             this.ToCheck = new System.Windows.Forms.CheckBox();
@@ -60,8 +70,10 @@
             this.FontLabel = new System.Windows.Forms.Label();
             this.FontButton = new System.Windows.Forms.Button();
             this.FontBox = new System.Windows.Forms.TextBox();
+            this.LanguageBox = new System.Windows.Forms.ComboBox();
             this.LoginGroup.SuspendLayout();
             this.DownloadGroup.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.RetryNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ToNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.FromNum)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).BeginInit();
@@ -155,6 +167,16 @@
             // 
             // DownloadGroup
             // 
+            this.DownloadGroup.Controls.Add(this.DownloadImageCheck);
+            this.DownloadGroup.Controls.Add(this.CompressCheck);
+            this.DownloadGroup.Controls.Add(this.RetryNum);
+            this.DownloadGroup.Controls.Add(this.RetryLabel);
+            this.DownloadGroup.Controls.Add(this.KeepHtmlCheck);
+            this.DownloadGroup.Controls.Add(this.RemoveBlankCheck);
+            this.DownloadGroup.Controls.Add(this.OutputDirButton);
+            this.DownloadGroup.Controls.Add(this.OutputDirText);
+            this.DownloadGroup.Controls.Add(this.OutputDirLabel);
+            this.DownloadGroup.Controls.Add(this.NoticeCheck);
             this.DownloadGroup.Controls.Add(this.ToLabel);
             this.DownloadGroup.Controls.Add(this.ToNum);
             this.DownloadGroup.Controls.Add(this.ToCheck);
@@ -169,10 +191,118 @@
             this.DownloadGroup.Controls.Add(this.NovelNoLable);
             this.DownloadGroup.Location = new System.Drawing.Point(13, 251);
             this.DownloadGroup.Name = "DownloadGroup";
-            this.DownloadGroup.Size = new System.Drawing.Size(439, 152);
+            this.DownloadGroup.Size = new System.Drawing.Size(439, 290);
             this.DownloadGroup.TabIndex = 1;
             this.DownloadGroup.TabStop = false;
             this.DownloadGroup.Text = "다운로드";
+            // 
+            // DownloadImageCheck
+            // 
+            this.DownloadImageCheck.AutoSize = true;
+            this.DownloadImageCheck.Checked = true;
+            this.DownloadImageCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.DownloadImageCheck.Location = new System.Drawing.Point(150, 252);
+            this.DownloadImageCheck.Name = "DownloadImageCheck";
+            this.DownloadImageCheck.Size = new System.Drawing.Size(170, 29);
+            this.DownloadImageCheck.TabIndex = 27;
+            this.DownloadImageCheck.Text = "이미지 다운로드";
+            this.DownloadImageCheck.UseVisualStyleBackColor = true;
+            // 
+            // CompressCheck
+            // 
+            this.CompressCheck.AutoSize = true;
+            this.CompressCheck.Checked = true;
+            this.CompressCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.CompressCheck.Location = new System.Drawing.Point(10, 252);
+            this.CompressCheck.Name = "CompressCheck";
+            this.CompressCheck.Size = new System.Drawing.Size(123, 29);
+            this.CompressCheck.TabIndex = 26;
+            this.CompressCheck.Text = "EPUB 압축";
+            this.CompressCheck.UseVisualStyleBackColor = true;
+            // 
+            // RetryNum
+            // 
+            this.RetryNum.Location = new System.Drawing.Point(360, 215);
+            this.RetryNum.Maximum = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            this.RetryNum.Name = "RetryNum";
+            this.RetryNum.Size = new System.Drawing.Size(67, 31);
+            this.RetryNum.TabIndex = 25;
+            this.RetryNum.Value = new decimal(new int[] {
+            3,
+            0,
+            0,
+            0});
+            // 
+            // RetryLabel
+            // 
+            this.RetryLabel.AutoSize = true;
+            this.RetryLabel.Location = new System.Drawing.Point(285, 218);
+            this.RetryLabel.Name = "RetryLabel";
+            this.RetryLabel.Size = new System.Drawing.Size(66, 25);
+            this.RetryLabel.TabIndex = 24;
+            this.RetryLabel.Text = "재시도";
+            // 
+            // KeepHtmlCheck
+            // 
+            this.KeepHtmlCheck.AutoSize = true;
+            this.KeepHtmlCheck.Location = new System.Drawing.Point(135, 215);
+            this.KeepHtmlCheck.Name = "KeepHtmlCheck";
+            this.KeepHtmlCheck.Size = new System.Drawing.Size(129, 29);
+            this.KeepHtmlCheck.TabIndex = 23;
+            this.KeepHtmlCheck.Text = "HTML 유지";
+            this.KeepHtmlCheck.UseVisualStyleBackColor = true;
+            // 
+            // RemoveBlankCheck
+            // 
+            this.RemoveBlankCheck.AutoSize = true;
+            this.RemoveBlankCheck.Checked = true;
+            this.RemoveBlankCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.RemoveBlankCheck.Location = new System.Drawing.Point(10, 215);
+            this.RemoveBlankCheck.Name = "RemoveBlankCheck";
+            this.RemoveBlankCheck.Size = new System.Drawing.Size(122, 29);
+            this.RemoveBlankCheck.TabIndex = 22;
+            this.RemoveBlankCheck.Text = "빈 줄 제거";
+            this.RemoveBlankCheck.UseVisualStyleBackColor = true;
+            // 
+            // OutputDirButton
+            // 
+            this.OutputDirButton.Location = new System.Drawing.Point(352, 172);
+            this.OutputDirButton.Name = "OutputDirButton";
+            this.OutputDirButton.Size = new System.Drawing.Size(75, 36);
+            this.OutputDirButton.TabIndex = 21;
+            this.OutputDirButton.Text = "찾아보기";
+            this.OutputDirButton.UseVisualStyleBackColor = true;
+            this.OutputDirButton.Click += new System.EventHandler(this.OutputDirButton_Click);
+            // 
+            // OutputDirText
+            // 
+            this.OutputDirText.Location = new System.Drawing.Point(102, 175);
+            this.OutputDirText.Name = "OutputDirText";
+            this.OutputDirText.Size = new System.Drawing.Size(244, 31);
+            this.OutputDirText.TabIndex = 20;
+            // 
+            // OutputDirLabel
+            // 
+            this.OutputDirLabel.AutoSize = true;
+            this.OutputDirLabel.Location = new System.Drawing.Point(11, 178);
+            this.OutputDirLabel.Name = "OutputDirLabel";
+            this.OutputDirLabel.Size = new System.Drawing.Size(90, 25);
+            this.OutputDirLabel.TabIndex = 19;
+            this.OutputDirLabel.Text = "저장 경로";
+            // 
+            // NoticeCheck
+            // 
+            this.NoticeCheck.AutoSize = true;
+            this.NoticeCheck.Location = new System.Drawing.Point(25, 144);
+            this.NoticeCheck.Name = "NoticeCheck";
+            this.NoticeCheck.Size = new System.Drawing.Size(116, 29);
+            this.NoticeCheck.TabIndex = 18;
+            this.NoticeCheck.Text = "공지 포함";
+            this.NoticeCheck.UseVisualStyleBackColor = true;
             // 
             // ToLabel
             // 
@@ -304,28 +434,31 @@
             this.ExtensionLabel.AutoSize = true;
             this.ExtensionLabel.Location = new System.Drawing.Point(20, 106);
             this.ExtensionLabel.Name = "ExtensionLabel";
-            this.ExtensionLabel.Size = new System.Drawing.Size(66, 25);
+            this.ExtensionLabel.Size = new System.Drawing.Size(48, 25);
             this.ExtensionLabel.TabIndex = 1;
-            this.ExtensionLabel.Text = "확장자";
+            this.ExtensionLabel.Text = "형식";
             // 
             // NovelNoLable
             // 
             this.NovelNoLable.AutoSize = true;
             this.NovelNoLable.Location = new System.Drawing.Point(11, 70);
             this.NovelNoLable.Name = "NovelNoLable";
-            this.NovelNoLable.Size = new System.Drawing.Size(84, 25);
+            this.NovelNoLable.Size = new System.Drawing.Size(90, 25);
             this.NovelNoLable.TabIndex = 0;
-            this.NovelNoLable.Text = "소설번호";
+            this.NovelNoLable.Text = "소설 번호";
             // 
             // ConsoleBox
             // 
-            this.ConsoleBox.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ConsoleBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ConsoleBox.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.ConsoleBox.Location = new System.Drawing.Point(458, 23);
             this.ConsoleBox.Multiline = true;
             this.ConsoleBox.Name = "ConsoleBox";
             this.ConsoleBox.ReadOnly = true;
             this.ConsoleBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ConsoleBox.Size = new System.Drawing.Size(420, 380);
+            this.ConsoleBox.Size = new System.Drawing.Size(420, 518);
             this.ConsoleBox.TabIndex = 5;
             // 
             // ThreadLabel
@@ -333,9 +466,9 @@
             this.ThreadLabel.AutoSize = true;
             this.ThreadLabel.Location = new System.Drawing.Point(18, 223);
             this.ThreadLabel.Name = "ThreadLabel";
-            this.ThreadLabel.Size = new System.Drawing.Size(108, 25);
+            this.ThreadLabel.Size = new System.Drawing.Size(90, 25);
             this.ThreadLabel.TabIndex = 11;
-            this.ThreadLabel.Text = "스레드 개수";
+            this.ThreadLabel.Text = "스레드 수";
             // 
             // ThreadNum
             // 
@@ -397,7 +530,7 @@
             this.FontLabel.Name = "FontLabel";
             this.FontLabel.Size = new System.Drawing.Size(90, 25);
             this.FontLabel.TabIndex = 16;
-            this.FontLabel.Text = "폰트 매핑";
+            this.FontLabel.Text = "글자 치환";
             // 
             // FontButton
             // 
@@ -417,11 +550,32 @@
             this.FontBox.TabIndex = 8;
             this.FontBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.FontBox_KeyPress);
             // 
+            // LanguageBox
+            // 
+            this.LanguageBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.LanguageBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.LanguageBox.FormattingEnabled = true;
+            this.LanguageBox.Items.AddRange(new object[] {
+            "한국어",
+            "English",
+            "简体中文",
+            "繁體中文",
+            "日本語",
+            "Tiếng Việt",
+            "ภาษาไทย",
+            "Bahasa Indonesia"});
+            this.LanguageBox.Location = new System.Drawing.Point(728, 568);
+            this.LanguageBox.Name = "LanguageBox";
+            this.LanguageBox.Size = new System.Drawing.Size(150, 33);
+            this.LanguageBox.TabIndex = 17;
+            this.LanguageBox.SelectedIndexChanged += new System.EventHandler(this.LanguageBox_SelectedIndexChanged);
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(890, 424);
+            this.ClientSize = new System.Drawing.Size(890, 608);
+            this.Controls.Add(this.LanguageBox);
             this.Controls.Add(this.FontButton);
             this.Controls.Add(this.FontLabel);
             this.Controls.Add(this.FontBox);
@@ -434,10 +588,9 @@
             this.Controls.Add(this.DownloadGroup);
             this.Controls.Add(this.LoginGroup);
             this.Font = new System.Drawing.Font("Malgun Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.MaximizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(906, 655);
             this.Name = "MainWin";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "NovelpiaDownloader";
@@ -446,6 +599,7 @@
             this.LoginGroup.PerformLayout();
             this.DownloadGroup.ResumeLayout(false);
             this.DownloadGroup.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.RetryNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ToNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.FromNum)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThreadNum)).EndInit();
@@ -457,37 +611,47 @@
 
         #endregion
 
-        private System.Windows.Forms.GroupBox LoginGroup;
-        private System.Windows.Forms.Button LoginButton2;
-        private System.Windows.Forms.Button LoginButton1;
-        private System.Windows.Forms.TextBox LoginkeyText;
-        private System.Windows.Forms.TextBox PasswordText;
-        private System.Windows.Forms.TextBox EmailText;
-        private System.Windows.Forms.Label LoginkeyLabel;
-        private System.Windows.Forms.Label PasswordLabel;
-        private System.Windows.Forms.Label EmailLabel;
-        private System.Windows.Forms.GroupBox DownloadGroup;
-        private System.Windows.Forms.RadioButton TxtButton;
-        private System.Windows.Forms.RadioButton EpubButton;
-        private System.Windows.Forms.TextBox NovelNoText;
-        private System.Windows.Forms.Label ExtensionLabel;
-        private System.Windows.Forms.Label NovelNoLable;
-        private System.Windows.Forms.Button DownloadButton;
-        private System.Windows.Forms.TextBox ConsoleBox;
-        private System.Windows.Forms.Label ThreadLabel;
-        private System.Windows.Forms.NumericUpDown ThreadNum;
-        private System.Windows.Forms.Label IntervalLabel;
-        private System.Windows.Forms.Label SecondLabel;
-        private System.Windows.Forms.NumericUpDown IntervalNum;
-        private System.Windows.Forms.NumericUpDown FromNum;
-        private System.Windows.Forms.CheckBox FromCheck;
-        private System.Windows.Forms.Label FromLabel;
-        private System.Windows.Forms.Label ToLabel;
-        private System.Windows.Forms.NumericUpDown ToNum;
-        private System.Windows.Forms.CheckBox ToCheck;
-        private System.Windows.Forms.Label FontLabel;
-        private System.Windows.Forms.Button FontButton;
-        private System.Windows.Forms.TextBox FontBox;
+        internal System.Windows.Forms.GroupBox LoginGroup;
+        internal System.Windows.Forms.Button LoginButton2;
+        internal System.Windows.Forms.Button LoginButton1;
+        internal System.Windows.Forms.TextBox LoginkeyText;
+        internal System.Windows.Forms.TextBox PasswordText;
+        internal System.Windows.Forms.TextBox EmailText;
+        internal System.Windows.Forms.Label LoginkeyLabel;
+        internal System.Windows.Forms.Label PasswordLabel;
+        internal System.Windows.Forms.Label EmailLabel;
+        internal System.Windows.Forms.GroupBox DownloadGroup;
+        internal System.Windows.Forms.RadioButton TxtButton;
+        internal System.Windows.Forms.RadioButton EpubButton;
+        internal System.Windows.Forms.TextBox NovelNoText;
+        internal System.Windows.Forms.Label ExtensionLabel;
+        internal System.Windows.Forms.Label NovelNoLable;
+        internal System.Windows.Forms.Button DownloadButton;
+        internal System.Windows.Forms.TextBox ConsoleBox;
+        internal System.Windows.Forms.Label ThreadLabel;
+        internal System.Windows.Forms.NumericUpDown ThreadNum;
+        internal System.Windows.Forms.Label IntervalLabel;
+        internal System.Windows.Forms.Label SecondLabel;
+        internal System.Windows.Forms.NumericUpDown IntervalNum;
+        internal System.Windows.Forms.NumericUpDown FromNum;
+        internal System.Windows.Forms.CheckBox FromCheck;
+        internal System.Windows.Forms.Label FromLabel;
+        internal System.Windows.Forms.Label ToLabel;
+        internal System.Windows.Forms.NumericUpDown ToNum;
+        internal System.Windows.Forms.CheckBox ToCheck;
+        internal System.Windows.Forms.Label FontLabel;
+        internal System.Windows.Forms.Button FontButton;
+        internal System.Windows.Forms.TextBox FontBox;
+        internal System.Windows.Forms.ComboBox LanguageBox;
+        internal System.Windows.Forms.CheckBox NoticeCheck;
+        internal System.Windows.Forms.Label OutputDirLabel;
+        internal System.Windows.Forms.TextBox OutputDirText;
+        internal System.Windows.Forms.Button OutputDirButton;
+        internal System.Windows.Forms.CheckBox RemoveBlankCheck;
+        internal System.Windows.Forms.CheckBox KeepHtmlCheck;
+        internal System.Windows.Forms.Label RetryLabel;
+        internal System.Windows.Forms.NumericUpDown RetryNum;
+        internal System.Windows.Forms.CheckBox CompressCheck;
+        internal System.Windows.Forms.CheckBox DownloadImageCheck;
     }
 }
-

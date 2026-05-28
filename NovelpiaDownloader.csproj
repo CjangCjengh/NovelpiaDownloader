@@ -58,6 +58,8 @@
   <ItemGroup>
     <Compile Include="FontMapping.cs" />
     <Compile Include="EpubTemplate.cs" />
+    <Compile Include="EpubZipWriter.cs" />
+    <Compile Include="Lang.cs" />
     <Compile Include="Novelpia.cs" />
     <Compile Include="MainWin.cs">
       <SubType>Form</SubType>

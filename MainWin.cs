@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -21,163 +20,255 @@ namespace NovelpiaDownloader
             InitializeComponent();
             novelpia = new Novelpia();
 
+            string lang = Lang.Ko;
             if (File.Exists("config.json"))
             {
                 var config_dict = new JavaScriptSerializer().Deserialize<Dictionary<string, dynamic>>(File.ReadAllText("config.json"));
+                if (config_dict.ContainsKey("language"))
+                    lang = config_dict["language"];
+                ApplyLanguage(lang);
                 if (config_dict.ContainsKey("thread_num"))
                     ThreadNum.Value = config_dict["thread_num"];
                 if (config_dict.ContainsKey("interval_num"))
                     IntervalNum.Value = config_dict["interval_num"];
                 if (config_dict.ContainsKey("mapping_path"))
                     font_mapping = new FontMapping(FontBox.Text = config_dict["mapping_path"]);
+                if (config_dict.ContainsKey("output_dir"))
+                    OutputDirText.Text = config_dict["output_dir"];
+                if (config_dict.ContainsKey("include_notice"))
+                    NoticeCheck.Checked = config_dict["include_notice"];
+                if (config_dict.ContainsKey("remove_blank"))
+                    RemoveBlankCheck.Checked = config_dict["remove_blank"];
+                if (config_dict.ContainsKey("keep_html"))
+                    KeepHtmlCheck.Checked = config_dict["keep_html"];
+                if (config_dict.ContainsKey("retry_num"))
+                    RetryNum.Value = config_dict["retry_num"];
+                if (config_dict.ContainsKey("compress"))
+                    CompressCheck.Checked = config_dict["compress"];
+                if (config_dict.ContainsKey("download_image"))
+                    DownloadImageCheck.Checked = config_dict["download_image"];
                 if (config_dict.ContainsKey("email") && config_dict.ContainsKey("wd"))
                     if (novelpia.Login(EmailText.Text = config_dict["email"], PasswordText.Text = config_dict["wd"]))
                     {
-                        ConsoleBox.Text += "로그인 성공!\r\n";
+                        ConsoleBox.AppendText(Lang.T("login_ok"));
                         LoginkeyText.Text = novelpia.loginkey;
                         return;
                     }
                     else
-                        ConsoleBox.Text += "로그인 실패!\r\n";
+                        ConsoleBox.AppendText(Lang.T("login_fail"));
                 if (config_dict.ContainsKey("loginkey"))
                     novelpia.loginkey = LoginkeyText.Text = config_dict["loginkey"];
             }
+            else
+                ApplyLanguage(lang);
+        }
+
+        void ApplyLanguage(string lang)
+        {
+            int idx = System.Array.IndexOf(Lang.Codes, lang);
+            LanguageBox.SelectedIndex = idx >= 0 ? idx : 0;
+            Lang.Apply(this, idx >= 0 ? lang : Lang.Ko);
+        }
+
+        private void LanguageBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int idx = LanguageBox.SelectedIndex;
+            if (idx < 0 || idx >= Lang.Codes.Length) idx = 0;
+            Lang.Apply(this, Lang.Codes[idx]);
         }
 
         readonly Novelpia novelpia;
         private FontMapping font_mapping;
+        private volatile bool _running;
+        private volatile bool _cancelRequested;
 
         private void DownloadButton_Click(object sender, EventArgs e)
         {
-            bool saveAsEpub = EpubButton.Checked;
-            SaveFileDialog sfd = new SaveFileDialog
+            if (_running)
             {
-                Filter = saveAsEpub ? "|*.epub" : "|*.txt"
-            };
-            if (sfd.ShowDialog() == DialogResult.OK)
-            {
-                Download(NovelNoText.Text, saveAsEpub, sfd.FileName);
+                _cancelRequested = true;
+                DownloadButton.Enabled = false;
+                DownloadButton.Text = Lang.T("btn_stopping");
+                return;
             }
-            sfd.Dispose();
+            bool saveAsEpub = EpubButton.Checked;
+            bool includeNotice = NoticeCheck.Checked;
+            bool removeBlank = RemoveBlankCheck.Checked;
+            bool keepHtml = KeepHtmlCheck.Checked;
+            bool compress = CompressCheck.Checked;
+            bool downloadImage = DownloadImageCheck.Checked;
+            int retry = (int)RetryNum.Value;
+            string outputDir = OutputDirText.Text.Trim();
+            string novelNo = NovelNoText.Text;
+            string ext = saveAsEpub ? ".epub" : ".txt";
+            string targetPath = null;
+            if (!string.IsNullOrEmpty(outputDir) && Directory.Exists(outputDir))
+            {
+                string title = FetchNovelTitle(novelNo);
+                if (string.IsNullOrEmpty(title))
+                    title = novelNo;
+                foreach (char c in Path.GetInvalidFileNameChars())
+                    title = title.Replace(c, '_');
+                targetPath = Path.Combine(outputDir, title + ext);
+            }
+            else
+            {
+                SaveFileDialog sfd = new SaveFileDialog
+                {
+                    Filter = saveAsEpub ? "|*.epub" : "|*.txt"
+                };
+                if (sfd.ShowDialog() == DialogResult.OK)
+                    targetPath = sfd.FileName;
+                sfd.Dispose();
+            }
+            if (targetPath == null)
+                return;
+            _running = true;
+            _cancelRequested = false;
+            DownloadButton.Text = Lang.T("btn_stop");
+            Download(novelNo, saveAsEpub, includeNotice, removeBlank, keepHtml, compress, downloadImage, retry, targetPath);
         }
 
-        void Download(string novelNo, bool saveAsEpub, string path)
+        private void OutputDirButton_Click(object sender, EventArgs e)
         {
-            ConsoleBox.AppendText("다운로드 시작!\r\n");
+            FolderBrowserDialog fbd = new FolderBrowserDialog
+            {
+                Description = Lang.T("folder_select"),
+                SelectedPath = OutputDirText.Text
+            };
+            if (fbd.ShowDialog() == DialogResult.OK)
+                OutputDirText.Text = fbd.SelectedPath;
+            fbd.Dispose();
+        }
+
+        private string FetchNovelTitle(string novelNo)
+        {
+            try
+            {
+                string html = GetRequest($"https://novelpia.com/novel/{novelNo}", novelpia.loginkey);
+                var m = Regex.Match(html, @"productName = '(.+?)';");
+                return m.Success ? HttpUtility.HtmlDecode(m.Groups[1].Value) : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        void Download(string novelNo, bool saveAsEpub, bool includeNotice, bool removeBlank, bool keepHtml, bool compress, bool downloadImage, int retry, string path)
+        {
+            Log(Lang.T("sep") + Lang.T("download_start"));
             string directory = Path.Combine(Path.GetDirectoryName(path), novelNo);
             Directory.CreateDirectory(directory);
             int thread_num = (int)ThreadNum.Value;
             float interval = (float)IntervalNum.Value;
-            int from = FromCheck.Checked ? (int)FromNum.Value - 1 : 0;
+            int from = FromCheck.Checked ? (int)FromNum.Value : 1;
             int to = ToCheck.Checked ? (int)ToNum.Value : int.MaxValue;
             Task.Run(() =>
             {
-                int chapterNo = 0;
-                int page = 0;
-                var chapterIds = new List<string>();
-                var chapterNames = new List<(string, string)>();
-                List<Thread> threads = new List<Thread>();
-                bool get_content = true;
-                while (get_content)
+                try
                 {
-                    string data = $"novel_no={novelNo}&sort=DOWN&page={page}";
-                    string resp = PostRequest("https://novelpia.com/proc/episode_list", "", data);
-                    var chapters = Regex.Matches(resp, @"id=""bookmark_(\d+)""></i>(.+?)</b>");
-                    if (chapterIds.Contains(chapters[0].Groups[1].Value))
-                        break;
-                    foreach (Match chapter in chapters)
+                    string novelPageHtml = (saveAsEpub || includeNotice) ? GetRequest($"https://novelpia.com/novel/{novelNo}", novelpia.loginkey) : null;
+                    int page = 0;
+                    var chapterIds = new List<string>();
+                    var chapterNames = new List<(string, string)>();
+                    List<Thread> threads = new List<Thread>();
+                    if (includeNotice && novelPageHtml != null)
                     {
-                        if (chapterNo < from)
+                        var notice_table = Regex.Match(novelPageHtml, @"<table[^>]*class=""[^""]*notice_table[^""]*""[^>]*>(.+?)</table>", RegexOptions.Singleline);
+                        if (notice_table.Success)
                         {
-                            chapterNo++;
-                            continue;
+                            var notices = Regex.Matches(notice_table.Groups[1].Value, @"location='/viewer/(\d+)';""[^>]*><b>(.+?)</b>", RegexOptions.Singleline);
+                            int noticeNo = 1;
+                            foreach (Match notice in notices)
+                            {
+                                string chapterId = notice.Groups[1].Value;
+                                string chapterName = notice.Groups[2].Value;
+                                string jsonPath = Path.Combine(directory, $"notice_{noticeNo.ToString().PadLeft(4, '0')}.json");
+                                string capturedName = chapterName;
+                                string capturedId = chapterId;
+                                string capturedPath = jsonPath;
+                                threads.Add(new Thread(() => DownloadChapter(capturedId, capturedName, capturedPath, true, 0, retry)));
+                                chapterNames.Add((HttpUtility.HtmlEncode($"[{Lang.T("notice")}] {chapterName}"), jsonPath));
+                                chapterIds.Add(chapterId);
+                                noticeNo++;
+                            }
                         }
-                        if (chapterNo >= to)
-                        {
-                            get_content = false;
+                    }
+                    bool get_content = true;
+                    while (get_content)
+                    {
+                        if (_cancelRequested) break;
+                        string data = $"novel_no={novelNo}&sort=DOWN&page={page}";
+                        string resp = PostRequest("https://novelpia.com/proc/episode_list", "", data);
+                        var chapters = Regex.Matches(resp, @"id=""bookmark_(\d+)""></i>(.+?)</b>.+?>EP\.(\d+)<");
+                        if (chapters.Count == 0)
                             break;
-                        }
-                        string chapterId = chapter.Groups[1].Value;
-                        string chapterName = chapter.Groups[2].Value;
-                        string jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
-                        threads.Add(new Thread(() => DownloadChapter(chapterId, chapterName, jsonPath)));
-                        chapterNames.Add((HttpUtility.HtmlEncode(chapterName), jsonPath));
-                        chapterIds.Add(chapterId);
-                        chapterNo++;
-                    }
-                    page++;
-                }
-
-                ExecuteThreads(threads, thread_num, interval);
-                threads.Clear();
-
-                if (saveAsEpub)
-                {
-                    Directory.CreateDirectory(Path.Combine(directory, "META-INF"));
-                    Directory.CreateDirectory(Path.Combine(directory, "OEBPS/Styles"));
-                    Directory.CreateDirectory(Path.Combine(directory, "OEBPS/Text"));
-                    Directory.CreateDirectory(Path.Combine(directory, "OEBPS/Images"));
-                    using (var file = new StreamWriter(Path.Combine(directory, "mimetype"), false))
-                        file.Write("application/epub+zip");
-                    using (var file = new StreamWriter(Path.Combine(directory, "META-INF/container.xml"), false))
-                        file.Write(EpubTemplate.container);
-                    using (var file = new StreamWriter(Path.Combine(directory, "OEBPS/Styles/sgc-toc.css"), false))
-                        file.Write(EpubTemplate.sgctoc);
-                    using (var file = new StreamWriter(Path.Combine(directory, "OEBPS/Styles/Stylesheet.css"), false))
-                        file.Write(EpubTemplate.stylesheet);
-                    string responseText;
-                    var request = (HttpWebRequest)WebRequest.Create($"https://novelpia.com/novel/{novelNo}");
-                    request.Method = "GET";
-                    request.UserAgent = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36";
-                    request.Headers.Add("cookie", $"LOGINKEY={novelpia.loginkey};");
-                    var response = (HttpWebResponse)request.GetResponse();
-                    using (var streamReader = new StreamReader(response.GetResponseStream()))
-                    {
-                        responseText = streamReader.ReadToEnd();
-                    }
-
-                    var match = Regex.Match(responseText, @"productName = '(.+?)';");
-                    string title = match.Groups[1].Value;
-                    match = Regex.Match(responseText, @"href=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
-                    string url = match.Groups[1].Value;
-                    if (string.IsNullOrEmpty(url))
-                    {
-                        match = Regex.Match(responseText, @"src=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
-                        url = match.Groups[1].Value;
-                    }
-
-                    string cover_url = url;
-                    threads.Add(new Thread(() => DownloadImage(cover_url,
-                        Path.Combine(directory, $"OEBPS/Images/cover.jpg"), "커버")));
-
-                    using (var file = new StreamWriter(Path.Combine(directory, "OEBPS/toc.ncx"), false))
-                    {
-                        file.Write(EpubTemplate.toc);
-                        file.Write($"<text>{title}</text>\n</docTitle>\n<navMap>\n");
-                        for (int i = 0; i < chapterNames.Count; i++)
+                        if (chapterIds.Contains(chapters[0].Groups[1].Value))
+                            break;
+                        foreach (Match chapter in chapters)
                         {
-                            file.Write($"<navPoint id=\"navPoint-{i + 1}\" playOrder=\"{i + 1}\">\n" +
-                                "<navLabel>\n" +
-                                $"<text>{chapterNames[i].Item1}</text>\n" +
-                                "</navLabel>\n" +
-                                $"<content src=\"Text/chapter{Path.ChangeExtension(Path.GetFileName(chapterNames[i].Item2), "html")}\" />\n" +
-                                "</navPoint>\n");
+                            int chapterNo = int.Parse(chapter.Groups[3].Value);
+                            if (chapterNo < from)
+                                continue;
+                            if (chapterNo > to)
+                            {
+                                get_content = false;
+                                break;
+                            }
+                            string chapterId = chapter.Groups[1].Value;
+                            string chapterName = chapter.Groups[2].Value;
+                            string jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
+                            int capturedNo = chapterNo;
+                            threads.Add(new Thread(() => DownloadChapter(chapterId, chapterName, jsonPath, false, capturedNo, retry)));
+                            chapterNames.Add((HttpUtility.HtmlEncode(chapterName), jsonPath));
+                            chapterIds.Add(chapterId);
                         }
-                        file.Write("</navMap>\n</ncx>\n");
+                        page++;
                     }
 
-                    int imageNo = 1;
-                    using (var file = new StreamWriter(Path.Combine(directory, $"OEBPS/Text/cover.html"), false))
-                        file.Write(EpubTemplate.cover);
-                    chapterNames.ForEach(s =>
+                    ExecuteThreads(threads, thread_num, interval);
+                    threads.Clear();
+                    if (_cancelRequested)
+                        Log(Lang.T("cancelled"));
+
+                    if (saveAsEpub)
                     {
-                        if (!File.Exists(s.Item2))
-                            return;
-                        string temp = Path.ChangeExtension(Path.GetFileName(s.Item2), "html");
-                        using (var file = new StreamWriter(Path.Combine(directory, $"OEBPS/Text/chapter{temp}"), false))
+                        string responseText = novelPageHtml;
+                        var match = Regex.Match(responseText, @"productName = '(.+?)';");
+                        string title = match.Groups[1].Value;
+                        match = Regex.Match(responseText, @"<meta[^>]+name=[""']author[""'][^>]+content=[""']([^""']+)[""']");
+                        string author = match.Success ? match.Groups[1].Value : "";
+                        string titleEnc = HttpUtility.HtmlEncode(title);
+                        string authorEnc = HttpUtility.HtmlEncode(author);
+                        match = Regex.Match(responseText, @"href=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
+                        string url = match.Groups[1].Value;
+                        if (string.IsNullOrEmpty(url))
                         {
-                            file.Write(EpubTemplate.chapter);
-                            file.Write($"<h1>{s.Item1}</h1>\n<p>&nbsp;</p>\n");
+                            match = Regex.Match(responseText, @"src=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
+                            url = match.Groups[1].Value;
+                        }
+
+                        string cover_url = url;
+                        string coverPath = Path.Combine(directory, "cover.jpg");
+                        if (downloadImage && !_cancelRequested && !string.IsNullOrEmpty(cover_url))
+                            threads.Add(new Thread(() => DownloadImage(cover_url, coverPath, Lang.T("cover"))));
+
+                        var entries = new List<(string name, byte[] data)>();
+                        var htmlNames = new List<string>(chapterNames.Count);
+                        var imagePaths = new List<string>();
+                        int imageNo = 1;
+
+                        foreach (var s in chapterNames)
+                        {
+                            string htmlName = Path.ChangeExtension(Path.GetFileName(s.Item2), "html");
+                            htmlNames.Add(htmlName);
+                            if (!File.Exists(s.Item2))
+                                continue;
+                            var sb = new StringBuilder();
+                            sb.Append(EpubTemplate.chapter);
+                            sb.Append("<h1>").Append(s.Item1).Append("</h1>\n<p>&nbsp;</p>\n");
+                            var pendingTags = new List<string>();
                             var serializer = new JavaScriptSerializer();
                             using (var reader = new StreamReader(s.Item2, Encoding.UTF8))
                             {
@@ -186,125 +277,262 @@ namespace NovelpiaDownloader
                                 {
                                     var textDict = (Dictionary<string, object>)text;
                                     string textStr = (string)textDict["text"];
-                                    match = Regex.Match(textStr, @"<img.+?src=\""(.+?)\"".+?>");
-                                    if (match.Success)
+                                    var imatch = Regex.Match(textStr, @"<img.+?src=\""(.+?)\"".+?>");
+                                    if (imatch.Success)
                                     {
                                         if (!textStr.Contains("cover-wrapper"))
                                         {
-                                            url = match.Groups[1].Value;
-
-                                            string image_url = url;
-                                            int image_no = imageNo;
-                                            threads.Add(new Thread(() => DownloadImage(image_url,
-                                                Path.Combine(directory, $"OEBPS/Images/{image_no}.jpg"), "삽화")));
-
-                                            textStr = Regex.Replace(textStr, @"<img.+?src=\"".+?\"".+?>",
-                                                $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.jpg\" width=\"100%\"/>");
-                                            file.Write($"<p>{textStr}</p>\n");
-                                            imageNo++;
+                                            if (downloadImage)
+                                            {
+                                                string image_url = imatch.Groups[1].Value;
+                                                int image_no = imageNo;
+                                                string imgPath = Path.Combine(directory, $"img_{image_no}.jpg");
+                                                if (!_cancelRequested)
+                                                    threads.Add(new Thread(() => DownloadImage(image_url, imgPath, Lang.T("illustration"))));
+                                                imagePaths.Add(imgPath);
+                                                textStr = Regex.Replace(textStr, @"<img.+?src=\"".+?\"".+?>",
+                                                    $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.jpg\" width=\"100%\"/>");
+                                                sb.Append("<p>").Append(textStr).Append("</p>\n");
+                                                imageNo++;
+                                            }
+                                            else if (!removeBlank)
+                                            {
+                                                sb.Append("<p>&#160;</p>\n");
+                                            }
                                         }
                                         continue;
                                     }
-                                    textStr = Regex.Replace(textStr, @"<p style='height: 0px; width: 0px;.+?>.*?</p>", "");
-                                    textStr = Regex.Replace(textStr, @"</?[^>]+>|\n", "");
+                                    textStr = CleanText(textStr, keepHtml, pendingTags);
                                     if (textStr == "")
+                                    {
+                                        if (!removeBlank)
+                                            sb.Append("<p>&#160;</p>\n");
                                         continue;
+                                    }
                                     if (font_mapping != null)
                                         textStr = font_mapping.DecodeText(textStr);
-                                    file.Write($"<p>{textStr}</p>\n");
+                                    sb.Append("<p>").Append(textStr).Append("</p>\n");
                                 }
                             }
-                            file.Write("</body>\n</html>\n");
-                        }
-                        File.Delete(s.Item2);
-                    });
-
-                    using (var file = new StreamWriter(Path.Combine(directory, "OEBPS/content.opf"), false))
-                    {
-                        file.Write(EpubTemplate.content1);
-                        file.Write($"<dc:title>{title}</dc:title>\n");
-                        file.Write(EpubTemplate.content2);
-                        for (int i = 0; i < chapterNames.Count; i++)
-                        {
-                            string temp = Path.ChangeExtension(Path.GetFileName(chapterNames[i].Item2), "html");
-                            file.Write($"<item id=\"chapter{temp}\" href=\"Text/chapter{temp}\" media-type=\"application/xhtml+xml\"/>\n");
-                        }
-                        for (int i = 1; i < imageNo; i++)
-                        {
-                            file.Write($"<item id=\"{i}.jpg\" href=\"Images/{i}.jpg\" media-type=\"image/jpeg\"/>\n");
-                        }
-                        file.Write("</manifest>\n<spine toc=\"ncx\">\n<itemref idref=\"cover.html\"/>\n");
-                        for (int i = 0; i < chapterNames.Count; i++)
-                        {
-                            string temp = Path.ChangeExtension(Path.GetFileName(chapterNames[i].Item2), "html");
-                            file.Write($"<itemref idref=\"chapter{temp}\"/>\n");
-                        }
-                        file.Write("</spine>\n<guide>\n" +
-                            "<reference type=\"cover\" title=\"Cover\" href=\"Text/cover.html\"/>\n" +
-                            "</guide>\n</package>\n");
-                    }
-
-                    if (File.Exists(path))
-                        File.Delete(path);
-
-                    ExecuteThreads(threads, thread_num, interval);
-
-                    ZipFile.CreateFromDirectory(directory, path);
-                }
-                else
-                {
-                    using (var file = new StreamWriter(path, false))
-                    {
-                        var serializer = new JavaScriptSerializer();
-                        chapterNames.ForEach(s =>
-                        {
-                            file.Write($"{s.Item1}\n\n");
-                            if (!File.Exists(s.Item2))
-                                return;
-                            using (var reader = new StreamReader(s.Item2, Encoding.UTF8))
-                            {
-                                var texts = serializer.Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
-                                foreach (var text in (ArrayList)texts["s"])
-                                {
-                                    var textDict = (Dictionary<string, object>)text;
-                                    string textStr = (string)textDict["text"];
-                                    if (textStr.Contains("cover-wrapper"))
-                                        continue;
-                                    textStr = Regex.Replace(textStr, @"<img.+?>", "");
-                                    textStr = Regex.Replace(textStr, @"<p style='height: 0px; width: 0px;.+?>.*?</p>", "");
-                                    textStr = Regex.Replace(textStr, @"</?[^>]+>|\n", "");
-                                    if (textStr == "")
-                                        continue;
-                                    textStr = HttpUtility.HtmlDecode(textStr);
-                                    if (font_mapping != null)
-                                        textStr = font_mapping.DecodeText(textStr);
-                                    file.WriteLine(textStr);
-                                }
-                            }
-                            file.Write("\n");
+                            sb.Append("</body>\n</html>\n");
+                            entries.Add(($"OEBPS/Text/chapter{htmlName}", Encoding.UTF8.GetBytes(sb.ToString())));
                             File.Delete(s.Item2);
-                        });
+                        }
+
+                        var ncx = new StringBuilder();
+                        ncx.Append(EpubTemplate.toc);
+                        ncx.Append("<text>").Append(titleEnc).Append("</text>\n</docTitle>\n<navMap>\n");
+                        for (int i = 0; i < chapterNames.Count; i++)
+                        {
+                            ncx.Append($"<navPoint id=\"navPoint-{i + 1}\" playOrder=\"{i + 1}\">\n")
+                               .Append("<navLabel>\n<text>").Append(chapterNames[i].Item1).Append("</text>\n</navLabel>\n")
+                               .Append("<content src=\"Text/chapter").Append(htmlNames[i]).Append("\" />\n")
+                               .Append("</navPoint>\n");
+                        }
+                        ncx.Append("</navMap>\n</ncx>\n");
+
+                        var opf = new StringBuilder();
+                        opf.Append(EpubTemplate.content1);
+                        opf.Append($"<dc:identifier id=\"BookId\" opf:scheme=\"NovelpiaNovelNo\">{novelNo}</dc:identifier>\n");
+                        opf.Append("<dc:title>").Append(titleEnc).Append("</dc:title>\n");
+                        opf.Append("<dc:language>ko</dc:language>\n");
+                        if (!string.IsNullOrEmpty(author))
+                            opf.Append("<dc:creator opf:role=\"aut\">").Append(authorEnc).Append("</dc:creator>\n");
+                        opf.Append($"<dc:date>{DateTime.UtcNow:yyyy-MM-dd}</dc:date>\n");
+                        bool hasCover = downloadImage;
+                        if (hasCover)
+                            opf.Append("<meta name=\"cover\" content=\"cover.jpg\"/>\n");
+                        opf.Append(EpubTemplate.content2_head);
+                        if (hasCover)
+                            opf.Append(EpubTemplate.content2_cover);
+                        for (int i = 0; i < chapterNames.Count; i++)
+                            opf.Append($"<item id=\"chapter{htmlNames[i]}\" href=\"Text/chapter{htmlNames[i]}\" media-type=\"application/xhtml+xml\"/>\n");
+                        for (int i = 1; i < imageNo; i++)
+                            opf.Append($"<item id=\"img{i}\" href=\"Images/{i}.jpg\" media-type=\"image/jpeg\"/>\n");
+                        opf.Append("</manifest>\n<spine toc=\"ncx\">\n");
+                        if (hasCover)
+                            opf.Append("<itemref idref=\"cover.html\"/>\n");
+                        for (int i = 0; i < chapterNames.Count; i++)
+                            opf.Append($"<itemref idref=\"chapter{htmlNames[i]}\"/>\n");
+                        opf.Append("</spine>\n");
+                        if (hasCover)
+                            opf.Append("<guide>\n<reference type=\"cover\" title=\"Cover\" href=\"Text/cover.html\"/>\n</guide>\n");
+                        opf.Append("</package>\n");
+
+                        ExecuteThreads(threads, thread_num, interval);
+
+                        if (File.Exists(path))
+                            File.Delete(path);
+
+                        var now = DateTimeOffset.Now;
+                        using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+                        using (var zip = new EpubZipWriter(fs, compress))
+                        {
+                            zip.AddEntry("mimetype", "application/epub+zip", now);
+                            zip.AddEntry("META-INF/container.xml", EpubTemplate.container, now);
+                            zip.AddEntry("OEBPS/Styles/sgc-toc.css", EpubTemplate.sgctoc, now);
+                            zip.AddEntry("OEBPS/Styles/Stylesheet.css", EpubTemplate.stylesheet, now);
+                            if (hasCover)
+                                zip.AddEntry("OEBPS/Text/cover.html", EpubTemplate.cover, now);
+                            if (hasCover && File.Exists(coverPath))
+                                zip.AddEntry("OEBPS/Images/cover.jpg", File.ReadAllBytes(coverPath), now);
+                            for (int i = 0; i < imagePaths.Count; i++)
+                            {
+                                string ip = imagePaths[i];
+                                if (File.Exists(ip))
+                                    zip.AddEntry($"OEBPS/Images/{i + 1}.jpg", File.ReadAllBytes(ip), now);
+                            }
+                            foreach (var entry in entries)
+                                zip.AddEntry(entry.name, entry.data, now);
+                            zip.AddEntry("OEBPS/toc.ncx", ncx.ToString(), now);
+                            zip.AddEntry("OEBPS/content.opf", opf.ToString(), now);
+                        }
                     }
+                    else
+                    {
+                        using (var file = new StreamWriter(path, false))
+                        {
+                            var serializer = new JavaScriptSerializer();
+                            chapterNames.ForEach(s =>
+                            {
+                                file.Write($"{HttpUtility.HtmlDecode(s.Item1)}\n\n");
+                                if (!File.Exists(s.Item2))
+                                    return;
+                                var pendingTags = new List<string>();
+                                using (var reader = new StreamReader(s.Item2, Encoding.UTF8))
+                                {
+                                    var texts = serializer.Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
+                                    foreach (var text in (ArrayList)texts["s"])
+                                    {
+                                        var textDict = (Dictionary<string, object>)text;
+                                        string textStr = (string)textDict["text"];
+                                        if (textStr.Contains("cover-wrapper"))
+                                            continue;
+                                        if (!keepHtml)
+                                            textStr = Regex.Replace(textStr, @"<img.+?>", "");
+                                        textStr = CleanText(textStr, keepHtml, pendingTags);
+                                        if (textStr == "")
+                                        {
+                                            if (!removeBlank)
+                                                file.WriteLine();
+                                            continue;
+                                        }
+                                        textStr = HttpUtility.HtmlDecode(textStr);
+                                        if (font_mapping != null)
+                                            textStr = font_mapping.DecodeText(textStr);
+                                        file.WriteLine(textStr);
+                                    }
+                                }
+                                file.Write("\n");
+                                File.Delete(s.Item2);
+                            });
+                        }
+                    }
+                    Directory.Delete(directory, true);
+                    Log(Lang.T("download_done") + Lang.T("sep"));
                 }
-                Directory.Delete(directory, true);
-                Invoke(new Action(() => ConsoleBox.AppendText("다운로드 완료!\r\n")));
+                finally
+                {
+                    Invoke(new Action(() =>
+                    {
+                        _running = false;
+                        _cancelRequested = false;
+                        DownloadButton.Enabled = true;
+                        DownloadButton.Text = Lang.T("btn_download");
+                    }));
+                }
             });
         }
 
-        private void DownloadChapter(string chapterId, string chapterName, string jsonPath)
+        private void DownloadChapter(string chapterId, string chapterName, string jsonPath, bool isNotice, int epNo, int retry)
         {
-            try
+            string referer = $"https://novelpia.com/viewer/{chapterId}";
+            for (int attempt = 0; attempt <= retry; attempt++)
             {
-                string resp = PostRequest($"https://novelpia.com/proc/viewer_data/{chapterId}", novelpia.loginkey);
-                if (string.IsNullOrEmpty(resp) || resp.Contains("본인인증"))
-                    throw new Exception();
-                using (var file = new StreamWriter(jsonPath, false))
-                    file.Write(resp);
-                Invoke(new Action(() => ConsoleBox.AppendText(chapterName + "\r\n")));
+                try
+                {
+                    string resp = PostRequest($"https://novelpia.com/proc/viewer_data/{chapterId}", novelpia.loginkey, null, referer);
+                    if (string.IsNullOrEmpty(resp) || resp.Contains("본인인증"))
+                        throw new Exception();
+                    using (var file = new StreamWriter(jsonPath, false))
+                        file.Write(resp);
+                    Log(isNotice ? Lang.T("notice_ok", chapterName) : Lang.T("chapter_ok", epNo, chapterName));
+                    return;
+                }
+                catch
+                {
+                    if (attempt < retry)
+                        Log(Lang.T("chapter_retry", attempt + 1, retry));
+                    else
+                        Log(isNotice ? Lang.T("notice_fail", chapterName) : Lang.T("chapter_fail", epNo, chapterName));
+                }
             }
-            catch
+        }
+
+        private string CleanText(string textStr, bool keepHtml, List<string> pendingTags)
+        {
+            textStr = Regex.Replace(textStr, @"<p style='height: 0px; width: 0px;.+?>.*?</p>", "");
+            if (!keepHtml)
             {
-                Invoke(new Action(() => ConsoleBox.AppendText(chapterName + " ERROR!\r\n")));
+                textStr = Regex.Replace(textStr, @"</?[^>]+>", "");
+            }
+            else
+            {
+                var sb = new StringBuilder();
+                foreach (var tag in pendingTags)
+                    sb.Append('<').Append(tag).Append('>');
+                var stack = new List<string>(pendingTags);
+                int pos = 0;
+                var tagMatches = Regex.Matches(textStr, @"<(/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>");
+                foreach (Match m in tagMatches)
+                {
+                    sb.Append(textStr.Substring(pos, m.Index - pos));
+                    string tagName = m.Groups[2].Value.ToLower();
+                    bool isClose = m.Groups[1].Value == "/";
+                    bool selfClose = m.Value.EndsWith("/>") || tagName == "img" || tagName == "br" || tagName == "hr";
+                    if (selfClose)
+                    {
+                        sb.Append(m.Value);
+                    }
+                    else if (isClose)
+                    {
+                        if (stack.Count > 0 && stack[stack.Count - 1].StartsWith(tagName))
+                        {
+                            stack.RemoveAt(stack.Count - 1);
+                            sb.Append(m.Value);
+                        }
+                    }
+                    else
+                    {
+                        stack.Add(tagName + m.Groups[3].Value);
+                        sb.Append(m.Value);
+                    }
+                    pos = m.Index + m.Length;
+                }
+                sb.Append(textStr.Substring(pos));
+                for (int k = stack.Count - 1; k >= pendingTags.Count; k--)
+                {
+                    string fullOpen = stack[k];
+                    int sp = fullOpen.IndexOf(' ');
+                    string tn = sp > 0 ? fullOpen.Substring(0, sp) : fullOpen;
+                    sb.Append("</").Append(tn).Append('>');
+                }
+                pendingTags.Clear();
+                pendingTags.AddRange(stack);
+                textStr = sb.ToString();
+            }
+            return textStr.Replace("\n", "").Replace("\r", "");
+        }
+
+        private void Log(string message)
+        {
+            if (InvokeRequired)
+                Invoke(new Action(() => Log(message)));
+            else
+            {
+                ConsoleBox.AppendText(message);
+                ConsoleBox.SelectionStart = ConsoleBox.TextLength;
+                ConsoleBox.ScrollToCaret();
             }
         }
 
@@ -312,16 +540,16 @@ namespace NovelpiaDownloader
         {
             if (!url.StartsWith("http"))
                 url = "https:" + url;
-            Invoke(new Action(() => ConsoleBox.AppendText($"{type} 다운로드 시작\r\n{url}\r\n")));
+            Log(Lang.T("img_start", type, url));
             try
             {
                 using (var downloader = new WebClient())
                     downloader.DownloadFile(url, path);
-                Invoke(new Action(() => ConsoleBox.AppendText($"{type} 다운로드 완료\r\n")));
+                Log(Lang.T("img_done", type));
             }
             catch
             {
-                Invoke(new Action(() => ConsoleBox.AppendText($"{type} 다운로드 실패\r\n{url}\r\n")));
+                Log(Lang.T("img_fail", type, url));
             }
         }
 
@@ -329,23 +557,27 @@ namespace NovelpiaDownloader
         {
             for (int i = 0; i < threads.Count; i += batch_size)
             {
+                if (_cancelRequested) break;
                 int remain = threads.Count - i;
                 int limit = batch_size < remain ? batch_size : remain;
                 for (int j = 0; j < limit; j++)
                     threads[i + j].Start();
                 for (int j = 0; j < limit; j++)
                     threads[i + j].Join();
+                if (_cancelRequested) break;
                 Thread.Sleep((int)(interval * 1000));
             }
         }
 
-        private static string PostRequest(string url, string loginkey, string data = null)
+        private static string PostRequest(string url, string loginkey, string data = null, string referer = null)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.Method = "POST";
             request.UserAgent = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36";
             request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
             request.Headers.Add("cookie", $"LOGINKEY={loginkey};");
+            if (!string.IsNullOrEmpty(referer))
+                request.Referer = referer;
             if (!string.IsNullOrEmpty(data))
             {
                 using (var streamWriter = new StreamWriter(request.GetRequestStream()))
@@ -360,18 +592,31 @@ namespace NovelpiaDownloader
             }
         }
 
+        private static string GetRequest(string url, string loginkey)
+        {
+            var request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "GET";
+            request.UserAgent = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36";
+            request.Headers.Add("cookie", $"LOGINKEY={loginkey};");
+            var response = (HttpWebResponse)request.GetResponse();
+            using (var streamReader = new StreamReader(response.GetResponseStream()))
+            {
+                return streamReader.ReadToEnd();
+            }
+        }
+
         private void LoginButton1_Click(object sender, EventArgs e)
         {
             string email = EmailText.Text;
             string password = PasswordText.Text;
             if (novelpia.Login(email, password))
             {
-                ConsoleBox.AppendText("로그인 성공!\r\n");
+                Log(Lang.T("login_ok"));
                 LoginkeyText.Text = novelpia.loginkey;
             }
             else
             {
-                ConsoleBox.AppendText("로그인 실패!\r\n");
+                Log(Lang.T("login_fail"));
             }
         }
 
@@ -384,12 +629,20 @@ namespace NovelpiaDownloader
         {
             var config_dict = new Dictionary<string, dynamic>
             {
+                { "language", Lang.Current },
                 { "thread_num", ThreadNum.Value },
                 { "interval_num", IntervalNum.Value },
                 { "email", EmailText.Text },
                 { "wd", PasswordText.Text },
                 { "loginkey", LoginkeyText.Text },
-                { "mapping_path", FontBox.Text }
+                { "mapping_path", FontBox.Text },
+                { "output_dir", OutputDirText.Text },
+                { "include_notice", NoticeCheck.Checked },
+                { "remove_blank", RemoveBlankCheck.Checked },
+                { "keep_html", KeepHtmlCheck.Checked },
+                { "retry_num", RetryNum.Value },
+                { "compress", CompressCheck.Checked },
+                { "download_image", DownloadImageCheck.Checked }
             };
             using (StreamWriter sw = new StreamWriter("config.json"))
             {
@@ -399,12 +652,14 @@ namespace NovelpiaDownloader
 
         private void FromCheck_CheckedChanged(object sender, EventArgs e)
         {
-            FromNum.Enabled = FromLabel.Enabled = FromCheck.Checked;
+            FromNum.Enabled = FromCheck.Checked;
+            FromLabel.Enabled = FromCheck.Checked;
         }
 
         private void ToCheck_CheckedChanged(object sender, EventArgs e)
         {
-            ToNum.Enabled = ToLabel.Enabled = ToCheck.Checked;
+            ToNum.Enabled = ToCheck.Checked;
+            ToLabel.Enabled = ToCheck.Checked;
         }
 
         private void FontButton_Click(object sender, EventArgs e)

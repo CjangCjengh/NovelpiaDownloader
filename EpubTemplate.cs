@@ -281,14 +281,15 @@
         public static string content1 = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
             "<package version=\"2.0\" unique-identifier=\"BookId\" xmlns=\"http://www.idpf.org/2007/opf\">\n" +
             "<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:opf=\"http://www.idpf.org/2007/opf\">\n";
-        public static string content2 = "<meta content=\"1.9.10\" name=\"Sigil version\"/>\n" +
+        public static string content2_head = "<meta content=\"1.9.10\" name=\"Sigil version\"/>\n" +
             "</metadata>\n" +
             "<manifest>\n" +
             "<item id=\"ncx\" href=\"toc.ncx\" media-type=\"application/x-dtbncx+xml\"/>\n" +
             "<item id=\"sgc-toc.css\" href=\"Styles/sgc-toc.css\" media-type=\"text/css\"/>\n" +
-            "<item id=\"Stylesheet.css\" href=\"Styles/Stylesheet.css\" media-type=\"text/css\"/>\n" +
-            "<item id=\"cover.html\" href=\"Text/cover.html\" media-type=\"application/xhtml+xml\"/>\n" +
-            "<item id=\"cover.jpg\" href=\"Images/cover.jpg\" media-type=\"image/jpeg\"/>";
+            "<item id=\"Stylesheet.css\" href=\"Styles/Stylesheet.css\" media-type=\"text/css\"/>\n";
+        public static string content2_cover = "<item id=\"cover.html\" href=\"Text/cover.html\" media-type=\"application/xhtml+xml\"/>\n" +
+            "<item id=\"cover.jpg\" href=\"Images/cover.jpg\" media-type=\"image/jpeg\"/>\n";
+        public static string content2 = content2_head + content2_cover;
         public static string chapter = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
             "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"\n" +
             "\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n" +
