@@ -320,7 +320,7 @@
             "</head>\n" +
             "\n" +
             "<body>\n" +
-            "<div class=\"cover\"><img alt=\"cover\" src=\"../Images/cover.jpg\" width=\"100%\"/></div>\n" +
+            "<div class=\"cover\"><img alt=\"cover\" src=\"../Images/cover.__COVER_EXT__\" width=\"100%\"/></div>\n" +
             "</body>\n" +
             "</html>\n";
     }

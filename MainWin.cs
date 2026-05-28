@@ -50,6 +50,10 @@ namespace NovelpiaDownloader
                     DownloadImageCheck.Checked = config_dict["download_image"];
                 if (config_dict.ContainsKey("stop_on_error"))
                     StopOnErrorCheck.Checked = config_dict["stop_on_error"];
+                if (config_dict.ContainsKey("include_novel_no"))
+                    IncludeNovelNoCheck.Checked = config_dict["include_novel_no"];
+                if (config_dict.ContainsKey("include_chapter_range"))
+                    IncludeChapterRangeCheck.Checked = config_dict["include_chapter_range"];
                 if (config_dict.ContainsKey("email") && config_dict.ContainsKey("wd"))
                     if (novelpia.Login(EmailText.Text = config_dict["email"], PasswordText.Text = config_dict["wd"]))
                     {
@@ -84,6 +88,12 @@ namespace NovelpiaDownloader
         private FontMapping font_mapping;
         private volatile bool _running;
         private volatile bool _cancelRequested;
+        private int _progress_total;
+        private int _progress_done;
+        private int _progress_fail;
+        private int _progress_skip;
+        private int _lastLineStart = -1;
+        private long _lastProgressTicks;
 
         private void DownloadButton_Click(object sender, EventArgs e)
         {
@@ -101,6 +111,8 @@ namespace NovelpiaDownloader
             bool compress = CompressCheck.Checked;
             bool downloadImage = DownloadImageCheck.Checked;
             bool stopOnError = StopOnErrorCheck.Checked;
+            bool includeNovelNoInName = IncludeNovelNoCheck.Checked;
+            bool includeChapterRangeInName = IncludeChapterRangeCheck.Checked;
             int retry = (int)RetryNum.Value;
             string outputDir = OutputDirText.Text.Trim();
             var noMatch = Regex.Match(NovelNoText.Text ?? "", @"\d+");
@@ -116,6 +128,14 @@ namespace NovelpiaDownloader
                     title = novelNo;
                 foreach (char c in Path.GetInvalidFileNameChars())
                     title = title.Replace(c, '_');
+                if (includeNovelNoInName)
+                    title = $"{novelNo}_{title}";
+                if (includeChapterRangeInName && (FromCheck.Checked || ToCheck.Checked))
+                {
+                    int fromN = FromCheck.Checked ? (int)FromNum.Value : 1;
+                    string toN = ToCheck.Checked ? ((int)ToNum.Value).ToString() : "end";
+                    title = $"{title}_{fromN}-{toN}";
+                }
                 targetPath = Path.Combine(outputDir, title + ext);
             }
             else
@@ -205,6 +225,12 @@ namespace NovelpiaDownloader
                         }
                     }
                     bool get_content = true;
+                    Log(Lang.T("fetching_chapters") + "\r\n");
+                    int chaptersFoundLogStart = -1;
+                    if (InvokeRequired)
+                        Invoke(new Action(() => { chaptersFoundLogStart = ConsoleBox.TextLength; ConsoleBox.AppendText(Lang.T("chapter_list_progress", 0)); ConsoleBox.SelectionStart = ConsoleBox.TextLength; ConsoleBox.ScrollToCaret(); }));
+                    else
+                    { chaptersFoundLogStart = ConsoleBox.TextLength; ConsoleBox.AppendText(Lang.T("chapter_list_progress", 0)); ConsoleBox.SelectionStart = ConsoleBox.TextLength; ConsoleBox.ScrollToCaret(); }
                     while (get_content)
                     {
                         if (_cancelRequested) break;
@@ -234,10 +260,32 @@ namespace NovelpiaDownloader
                             threads.Add(new Thread(() => DownloadChapter(chapterId, chapterName, jsonPath, false, capturedNo)));
                             chapterNames.Add((HttpUtility.HtmlEncode(chapterName), jsonPath));
                         }
+                        // refresh "chapter list progress" line
+                        int foundCnt = chapterNames.Count;
+                        int capturedStart = chaptersFoundLogStart;
+                        BeginInvoke(new Action(() =>
+                        {
+                            int len = ConsoleBox.TextLength - capturedStart;
+                            ConsoleBox.Select(capturedStart, len);
+                            ConsoleBox.SelectedText = Lang.T("chapter_list_progress", foundCnt);
+                            ConsoleBox.SelectionStart = ConsoleBox.TextLength;
+                            ConsoleBox.ScrollToCaret();
+                        }));
                         page++;
                     }
+                    // finalize chapter list line
+                    {
+                        int foundCnt = chapterNames.Count;
+                        int capturedStart = chaptersFoundLogStart;
+                        if (InvokeRequired)
+                            Invoke(new Action(() => { int len = ConsoleBox.TextLength - capturedStart; ConsoleBox.Select(capturedStart, len); ConsoleBox.SelectedText = Lang.T("chapter_list_done", foundCnt) + "\r\n"; ConsoleBox.SelectionStart = ConsoleBox.TextLength; ConsoleBox.ScrollToCaret(); }));
+                        else
+                        { int len = ConsoleBox.TextLength - capturedStart; ConsoleBox.Select(capturedStart, len); ConsoleBox.SelectedText = Lang.T("chapter_list_done", foundCnt) + "\r\n"; ConsoleBox.SelectionStart = ConsoleBox.TextLength; ConsoleBox.ScrollToCaret(); }
+                    }
 
+                    BeginProgressPhase(threads.Count, Lang.T("phase_chapters"));
                     ExecuteThreads(threads, thread_num, interval);
+                    EndProgressPhase(Lang.T("phase_chapters"));
                     threads.Clear();
                     if (_cancelRequested)
                         Log(Lang.T("cancelled"));
@@ -262,7 +310,7 @@ namespace NovelpiaDownloader
                         }
 
                         string cover_url = url;
-                        string coverPath = Path.Combine(directory, "cover.jpg");
+                        string coverPath = Path.Combine(directory, "cover.bin");
                         if (downloadImage && !_cancelRequested && !string.IsNullOrEmpty(cover_url))
                             threads.Add(new Thread(() => DownloadImage(cover_url, coverPath, Lang.T("cover"))));
 
@@ -298,12 +346,12 @@ namespace NovelpiaDownloader
                                             {
                                                 string image_url = imatch.Groups[1].Value;
                                                 int image_no = imageNo;
-                                                string imgPath = Path.Combine(directory, $"img_{image_no}.jpg");
+                                                string imgPath = Path.Combine(directory, $"img_{image_no}.bin");
                                                 if (!_cancelRequested)
                                                     threads.Add(new Thread(() => DownloadImage(image_url, imgPath, Lang.T("illustration"))));
                                                 imagePaths.Add(imgPath);
                                                 textStr = Regex.Replace(textStr, @"<img.+?src=\"".+?\"".+?>",
-                                                    $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.jpg\" width=\"100%\"/>");
+                                                    $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.__EXT__\" width=\"100%\"/>");
                                                 sb.Append("<p>").Append(textStr).Append("</p>\n");
                                                 imageNo++;
                                             }
@@ -343,6 +391,8 @@ namespace NovelpiaDownloader
                         }
                         ncx.Append("</navMap>\n</ncx>\n");
 
+                        bool hasCover = downloadImage;
+
                         var opf = new StringBuilder();
                         opf.Append(EpubTemplate.content1);
                         opf.Append($"<dc:identifier id=\"BookId\" opf:scheme=\"NovelpiaNovelNo\">{novelNo}</dc:identifier>\n");
@@ -351,16 +401,51 @@ namespace NovelpiaDownloader
                         if (!string.IsNullOrEmpty(author))
                             opf.Append("<dc:creator opf:role=\"aut\">").Append(authorEnc).Append("</dc:creator>\n");
                         opf.Append($"<dc:date>{DateTime.UtcNow:yyyy-MM-dd}</dc:date>\n");
-                        bool hasCover = downloadImage;
+
+                        if (threads.Count > 0)
+                        {
+                            BeginProgressPhase(threads.Count, Lang.T("phase_images"));
+                            ExecuteThreads(threads, thread_num, interval);
+                            EndProgressPhase(Lang.T("phase_images"));
+                        }
+
+                        string coverExt = "jpg";
+                        string coverMime = "image/jpeg";
+                        if (hasCover && File.Exists(coverPath))
+                            DetectImageType(coverPath, out coverExt, out coverMime);
+                        var imageExts = new string[imagePaths.Count];
+                        var imageMimes = new string[imagePaths.Count];
+                        for (int i = 0; i < imagePaths.Count; i++)
+                        {
+                            string ie, im;
+                            if (File.Exists(imagePaths[i]) && DetectImageType(imagePaths[i], out ie, out im))
+                            { imageExts[i] = ie; imageMimes[i] = im; }
+                            else { imageExts[i] = "jpg"; imageMimes[i] = "image/jpeg"; }
+                        }
+                        for (int i = 0; i < entries.Count; i++)
+                        {
+                            var (n, d) = entries[i];
+                            string s = Encoding.UTF8.GetString(d);
+                            s = Regex.Replace(s, @"src=""\.\./Images/(\d+)\.__EXT__""", m =>
+                            {
+                                int k = int.Parse(m.Groups[1].Value);
+                                string e2 = (k >= 1 && k <= imageExts.Length) ? imageExts[k - 1] : "jpg";
+                                return $"src=\"../Images/{k}.{e2}\"";
+                            });
+                            entries[i] = (n, Encoding.UTF8.GetBytes(s));
+                        }
                         if (hasCover)
-                            opf.Append("<meta name=\"cover\" content=\"cover.jpg\"/>\n");
+                            opf.Append($"<meta name=\"cover\" content=\"cover-img\"/>\n");
                         opf.Append(EpubTemplate.content2_head);
                         if (hasCover)
-                            opf.Append(EpubTemplate.content2_cover);
+                        {
+                            opf.Append($"<item id=\"cover.html\" href=\"Text/cover.html\" media-type=\"application/xhtml+xml\"/>\n");
+                            opf.Append($"<item id=\"cover-img\" href=\"Images/cover.{coverExt}\" media-type=\"{coverMime}\"/>\n");
+                        }
                         for (int i = 0; i < chapterNames.Count; i++)
                             opf.Append($"<item id=\"chapter{htmlNames[i]}\" href=\"Text/chapter{htmlNames[i]}\" media-type=\"application/xhtml+xml\"/>\n");
                         for (int i = 1; i < imageNo; i++)
-                            opf.Append($"<item id=\"img{i}\" href=\"Images/{i}.jpg\" media-type=\"image/jpeg\"/>\n");
+                            opf.Append($"<item id=\"img{i}\" href=\"Images/{i}.{imageExts[i - 1]}\" media-type=\"{imageMimes[i - 1]}\"/>\n");
                         opf.Append("</manifest>\n<spine toc=\"ncx\">\n");
                         if (hasCover)
                             opf.Append("<itemref idref=\"cover.html\"/>\n");
@@ -370,8 +455,6 @@ namespace NovelpiaDownloader
                         if (hasCover)
                             opf.Append("<guide>\n<reference type=\"cover\" title=\"Cover\" href=\"Text/cover.html\"/>\n</guide>\n");
                         opf.Append("</package>\n");
-
-                        ExecuteThreads(threads, thread_num, interval);
 
                         if (File.Exists(path))
                             File.Delete(path);
@@ -385,14 +468,14 @@ namespace NovelpiaDownloader
                             zip.AddEntry("OEBPS/Styles/sgc-toc.css", EpubTemplate.sgctoc, now);
                             zip.AddEntry("OEBPS/Styles/Stylesheet.css", EpubTemplate.stylesheet, now);
                             if (hasCover)
-                                zip.AddEntry("OEBPS/Text/cover.html", EpubTemplate.cover, now);
+                                zip.AddEntry("OEBPS/Text/cover.html", EpubTemplate.cover.Replace("__COVER_EXT__", coverExt), now);
                             if (hasCover && File.Exists(coverPath))
-                                zip.AddEntry("OEBPS/Images/cover.jpg", File.ReadAllBytes(coverPath), now);
+                                zip.AddEntry($"OEBPS/Images/cover.{coverExt}", File.ReadAllBytes(coverPath), now);
                             for (int i = 0; i < imagePaths.Count; i++)
                             {
                                 string ip = imagePaths[i];
                                 if (File.Exists(ip))
-                                    zip.AddEntry($"OEBPS/Images/{i + 1}.jpg", File.ReadAllBytes(ip), now);
+                                    zip.AddEntry($"OEBPS/Images/{i + 1}.{imageExts[i]}", File.ReadAllBytes(ip), now);
                             }
                             foreach (var entry in entries)
                                 zip.AddEntry(entry.name, entry.data, now);
@@ -462,7 +545,7 @@ namespace NovelpiaDownloader
 
         private void DownloadChapter(string chapterId, string chapterName, string jsonPath, bool isNotice, int epNo)
         {
-            if (_cancelRequested || _hadFatalError) return;
+            if (_cancelRequested || _hadFatalError) { Interlocked.Increment(ref _progress_skip); return; }
             int retry = _retryCount;
             for (int attempt = 0; attempt <= retry; attempt++)
             {
@@ -473,16 +556,20 @@ namespace NovelpiaDownloader
                         throw new Exception();
                     using (var file = new StreamWriter(jsonPath, false))
                         file.Write(resp);
-                    Log(isNotice ? Lang.T("notice_ok", chapterName) : Lang.T("chapter_ok", epNo, chapterName));
+                    Interlocked.Increment(ref _progress_done);
+                    InsertLineAboveProgress(isNotice ? $"  ✓ {chapterName}" : $"  ✓ EP.{epNo:D4} {chapterName}");
+                    UpdateProgressThrottled();
                     return;
                 }
                 catch
                 {
                     if (attempt < retry)
-                        Log(Lang.T("chapter_retry", attempt + 1, retry));
+                        InsertLineAboveProgress(Lang.T("chapter_retry", attempt + 1, retry).TrimEnd('\r', '\n'));
                     else
                     {
-                        Log(isNotice ? Lang.T("notice_fail", chapterName) : Lang.T("chapter_fail", epNo, chapterName));
+                        Interlocked.Increment(ref _progress_fail);
+                        InsertLineAboveProgress(isNotice ? $"  ✗ {chapterName}" : $"  ✗ EP.{epNo:D4} {chapterName}");
+                        UpdateProgressThrottled(force: true);
                         if (_stopOnError) _hadFatalError = true;
                     }
                 }
@@ -551,21 +638,129 @@ namespace NovelpiaDownloader
             else
             {
                 ConsoleBox.AppendText(message);
+                _lastLineStart = -1;
                 ConsoleBox.SelectionStart = ConsoleBox.TextLength;
                 ConsoleBox.ScrollToCaret();
             }
         }
 
+        private static string BuildProgressBar(int current, int total, int width)
+        {
+            if (total <= 0) return $"[{new string('░', width)}]";
+            int filled = (int)Math.Round((double)current / total * width);
+            if (filled > width) filled = width;
+            return $"[{new string('█', filled)}{new string('░', width - filled)}]";
+        }
+
+        private string BuildProgressLine(string suffix = null)
+        {
+            int done = _progress_done;
+            int fail = _progress_fail;
+            int total = _progress_total;
+            int processed = done + fail;
+            string bar = BuildProgressBar(processed, total, 20);
+            string tail = suffix ?? Lang.T("progress_tail", done, fail);
+            return $"{bar} [{processed}/{total}] {tail}";
+        }
+
+        private void UpdateProgress(string suffix = null)
+        {
+            string line = BuildProgressLine(suffix);
+            if (InvokeRequired)
+                BeginInvoke(new Action(() => ReplaceLastLine(line)));
+            else
+                ReplaceLastLine(line);
+        }
+
+        private void UpdateProgressThrottled(bool force = false, int intervalMs = 80)
+        {
+            long now = DateTime.UtcNow.Ticks;
+            long last = Interlocked.Read(ref _lastProgressTicks);
+            long intervalTicks = intervalMs * TimeSpan.TicksPerMillisecond;
+            if (!force && now - last < intervalTicks) return;
+            if (Interlocked.CompareExchange(ref _lastProgressTicks, now, last) != last) return;
+            UpdateProgress();
+        }
+
+        private void BeginProgressPhase(int total, string header)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => BeginProgressPhase(total, header)));
+                return;
+            }
+            _progress_total = total;
+            _progress_done = 0;
+            _progress_fail = 0;
+            _progress_skip = 0;
+            _lastProgressTicks = 0;
+            ConsoleBox.AppendText(header + "\r\n");
+            _lastLineStart = ConsoleBox.TextLength;
+            ConsoleBox.AppendText(BuildProgressLine());
+            ConsoleBox.SelectionStart = ConsoleBox.TextLength;
+            ConsoleBox.ScrollToCaret();
+        }
+
+        private void EndProgressPhase(string doneLabel)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => EndProgressPhase(doneLabel)));
+                return;
+            }
+            string summary = _cancelRequested
+                ? Lang.T("progress_summary_cancel", doneLabel, _progress_done, _progress_fail, _progress_total)
+                : Lang.T("progress_summary_done", doneLabel, _progress_done, _progress_fail, _progress_total);
+            ReplaceLastLine(summary);
+            ConsoleBox.AppendText("\r\n");
+            _lastLineStart = -1;
+        }
+
+        private void ReplaceLastLine(string text)
+        {
+            int start = _lastLineStart >= 0 ? _lastLineStart : ConsoleBox.TextLength;
+            int len = ConsoleBox.TextLength - start;
+            ConsoleBox.Select(start, len);
+            ConsoleBox.SelectedText = text;
+            ConsoleBox.SelectionStart = ConsoleBox.TextLength;
+            ConsoleBox.ScrollToCaret();
+        }
+
+        private void InsertLineAboveProgress(string text)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => InsertLineAboveProgress(text)));
+                return;
+            }
+            if (_lastLineStart < 0)
+            {
+                ConsoleBox.AppendText(text + "\r\n");
+                ConsoleBox.SelectionStart = ConsoleBox.TextLength;
+                ConsoleBox.ScrollToCaret();
+                return;
+            }
+            string progressLine = BuildProgressLine();
+            int start = _lastLineStart;
+            int len = ConsoleBox.TextLength - start;
+            string replacement = text + "\r\n" + progressLine;
+            ConsoleBox.Select(start, len);
+            ConsoleBox.SelectedText = replacement;
+            _lastLineStart = start + text.Length + 2;
+            ConsoleBox.SelectionStart = ConsoleBox.TextLength;
+            ConsoleBox.ScrollToCaret();
+        }
+
         private void DownloadImage(string url, string path, string type)
         {
-            if (_cancelRequested || _hadFatalError) return;
+            if (_cancelRequested || _hadFatalError) { Interlocked.Increment(ref _progress_skip); return; }
             if (!url.StartsWith("http"))
                 url = "https:" + url;
+            string label = $"{type} {Path.GetFileNameWithoutExtension(path)}";
             int retry = _retryCount;
             for (int attempt = 0; attempt <= retry; attempt++)
             {
-                if (_cancelRequested || _hadFatalError) return;
-                Log(Lang.T("img_start", type, url));
+                if (_cancelRequested || _hadFatalError) { Interlocked.Increment(ref _progress_skip); return; }
                 try
                 {
                     var request = (HttpWebRequest)WebRequest.Create(url);
@@ -586,17 +781,21 @@ namespace NovelpiaDownloader
                             dst.Write(buf, 0, n);
                         }
                     }
-                    Log(Lang.T("img_done", type));
+                    Interlocked.Increment(ref _progress_done);
+                    InsertLineAboveProgress($"  ✓ {label}");
+                    UpdateProgressThrottled();
                     return;
                 }
                 catch
                 {
                     try { if (File.Exists(path)) File.Delete(path); } catch { }
                     if (attempt < retry)
-                        Log(Lang.T("chapter_retry", attempt + 1, retry));
+                        InsertLineAboveProgress(Lang.T("chapter_retry", attempt + 1, retry).TrimEnd('\r', '\n'));
                     else
                     {
-                        Log(Lang.T("img_fail", type, url));
+                        Interlocked.Increment(ref _progress_fail);
+                        InsertLineAboveProgress($"  ✗ {label}  ({url})");
+                        UpdateProgressThrottled(force: true);
                         if (_stopOnError) _hadFatalError = true;
                     }
                 }
@@ -655,6 +854,37 @@ namespace NovelpiaDownloader
             }
         }
 
+        private static bool DetectImageType(string path, out string ext, out string mime)
+        {
+            ext = "jpg";
+            mime = "image/jpeg";
+            try
+            {
+                byte[] head = new byte[16];
+                int n;
+                using (var fs = File.OpenRead(path))
+                    n = fs.Read(head, 0, head.Length);
+                if (n >= 8 && head[0] == 0x89 && head[1] == 0x50 && head[2] == 0x4E && head[3] == 0x47
+                    && head[4] == 0x0D && head[5] == 0x0A && head[6] == 0x1A && head[7] == 0x0A)
+                { ext = "png"; mime = "image/png"; return true; }
+                if (n >= 3 && head[0] == 0xFF && head[1] == 0xD8 && head[2] == 0xFF)
+                { ext = "jpg"; mime = "image/jpeg"; return true; }
+                if (n >= 6 && head[0] == 0x47 && head[1] == 0x49 && head[2] == 0x46 && head[3] == 0x38
+                    && (head[4] == 0x37 || head[4] == 0x39) && head[5] == 0x61)
+                { ext = "gif"; mime = "image/gif"; return true; }
+                if (n >= 12 && head[0] == 0x52 && head[1] == 0x49 && head[2] == 0x46 && head[3] == 0x46
+                    && head[8] == 0x57 && head[9] == 0x45 && head[10] == 0x42 && head[11] == 0x50)
+                { ext = "webp"; mime = "image/webp"; return true; }
+                if (n >= 2 && head[0] == 0x42 && head[1] == 0x4D)
+                { ext = "bmp"; mime = "image/bmp"; return true; }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private void LoginButton1_Click(object sender, EventArgs e)
         {
             string email = EmailText.Text;
@@ -693,7 +923,9 @@ namespace NovelpiaDownloader
                 { "retry_num", RetryNum.Value },
                 { "compress", CompressCheck.Checked },
                 { "download_image", DownloadImageCheck.Checked },
-                { "stop_on_error", StopOnErrorCheck.Checked }
+                { "stop_on_error", StopOnErrorCheck.Checked },
+                { "include_novel_no", IncludeNovelNoCheck.Checked },
+                { "include_chapter_range", IncludeChapterRangeCheck.Checked }
             };
             using (StreamWriter sw = new StreamWriter("config.json"))
             {

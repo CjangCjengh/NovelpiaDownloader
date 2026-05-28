@@ -40,6 +40,8 @@
             this.EmailLabel = new System.Windows.Forms.Label();
             this.DownloadGroup = new System.Windows.Forms.GroupBox();
             this.StopOnErrorCheck = new System.Windows.Forms.CheckBox();
+            this.IncludeNovelNoCheck = new System.Windows.Forms.CheckBox();
+            this.IncludeChapterRangeCheck = new System.Windows.Forms.CheckBox();
             this.DownloadImageCheck = new System.Windows.Forms.CheckBox();
             this.CompressCheck = new System.Windows.Forms.CheckBox();
             this.RetryNum = new System.Windows.Forms.NumericUpDown();
@@ -169,6 +171,8 @@
             // DownloadGroup
             // 
             this.DownloadGroup.Controls.Add(this.StopOnErrorCheck);
+            this.DownloadGroup.Controls.Add(this.IncludeNovelNoCheck);
+            this.DownloadGroup.Controls.Add(this.IncludeChapterRangeCheck);
             this.DownloadGroup.Controls.Add(this.DownloadImageCheck);
             this.DownloadGroup.Controls.Add(this.CompressCheck);
             this.DownloadGroup.Controls.Add(this.KeepHtmlCheck);
@@ -205,6 +209,26 @@
             this.StopOnErrorCheck.TabIndex = 30;
             this.StopOnErrorCheck.Text = "오류 시 중단";
             this.StopOnErrorCheck.UseVisualStyleBackColor = true;
+            // 
+            // IncludeNovelNoCheck
+            // 
+            this.IncludeNovelNoCheck.AutoSize = true;
+            this.IncludeNovelNoCheck.Location = new System.Drawing.Point(15, 155);
+            this.IncludeNovelNoCheck.Name = "IncludeNovelNoCheck";
+            this.IncludeNovelNoCheck.Size = new System.Drawing.Size(170, 29);
+            this.IncludeNovelNoCheck.TabIndex = 31;
+            this.IncludeNovelNoCheck.Text = "파일명에 소설 번호 추가";
+            this.IncludeNovelNoCheck.UseVisualStyleBackColor = true;
+            // 
+            // IncludeChapterRangeCheck
+            // 
+            this.IncludeChapterRangeCheck.AutoSize = true;
+            this.IncludeChapterRangeCheck.Location = new System.Drawing.Point(220, 155);
+            this.IncludeChapterRangeCheck.Name = "IncludeChapterRangeCheck";
+            this.IncludeChapterRangeCheck.Size = new System.Drawing.Size(170, 29);
+            this.IncludeChapterRangeCheck.TabIndex = 32;
+            this.IncludeChapterRangeCheck.Text = "파일명에 화수 범위 추가";
+            this.IncludeChapterRangeCheck.UseVisualStyleBackColor = true;
             // 
             // DownloadImageCheck
             // 
@@ -669,5 +693,7 @@
         internal System.Windows.Forms.CheckBox CompressCheck;
         internal System.Windows.Forms.CheckBox DownloadImageCheck;
         internal System.Windows.Forms.CheckBox StopOnErrorCheck;
+        internal System.Windows.Forms.CheckBox IncludeNovelNoCheck;
+        internal System.Windows.Forms.CheckBox IncludeChapterRangeCheck;
     }
 }

@@ -220,6 +220,78 @@ namespace NovelpiaDownloader
                 { Vi, "Đang dừng..." },
                 { Th, "กำลังหยุด..." },
                 { Id, "Menghentikan..." } } },
+            { "fetching_chapters", new Dictionary<string, string> {
+                { Ko, "📖 챕터 목록 가져오는 중..." },
+                { En, "📖 Fetching episode list..." },
+                { ZhCn, "📖 正在获取章节列表..." },
+                { ZhTw, "📖 正在取得章節列表..." },
+                { Ja, "📖 エピソード一覧を取得中..." },
+                { Vi, "📖 Đang tải danh sách tập..." },
+                { Th, "📖 กำลังดึงรายการตอน..." },
+                { Id, "📖 Mengambil daftar episode..." } } },
+            { "chapter_list_progress", new Dictionary<string, string> {
+                { Ko, "  ➜ {0}화 발견" },
+                { En, "  ➜ {0} episodes found" },
+                { ZhCn, "  ➜ 已找到 {0} 章" },
+                { ZhTw, "  ➜ 已找到 {0} 章" },
+                { Ja, "  ➜ {0} 話発見" },
+                { Vi, "  ➜ Tìm thấy {0} tập" },
+                { Th, "  ➜ พบ {0} ตอน" },
+                { Id, "  ➜ Ditemukan {0} ep" } } },
+            { "chapter_list_done", new Dictionary<string, string> {
+                { Ko, "  ✓ 챕터 목록 완료, 총 {0}화" },
+                { En, "  ✓ Episode list ready, total {0} episodes" },
+                { ZhCn, "  ✓ 章节列表完成,共 {0} 章" },
+                { ZhTw, "  ✓ 章節列表完成,共 {0} 章" },
+                { Ja, "  ✓ エピソード一覧取得完了、計 {0} 話" },
+                { Vi, "  ✓ Xong danh sách tập, tổng {0} tập" },
+                { Th, "  ✓ ได้รายการแล้ว ทั้งหมด {0} ตอน" },
+                { Id, "  ✓ Daftar episode siap, total {0} ep" } } },
+            { "phase_chapters", new Dictionary<string, string> {
+                { Ko, "📥 챕터 다운로드" },
+                { En, "📥 Downloading episodes" },
+                { ZhCn, "📥 下载章节" },
+                { ZhTw, "📥 下載章節" },
+                { Ja, "📥 エピソードをダウンロード" },
+                { Vi, "📥 Tải các tập" },
+                { Th, "📥 ดาวน์โหลดตอน" },
+                { Id, "📥 Mengunduh episode" } } },
+            { "phase_images", new Dictionary<string, string> {
+                { Ko, "🖼 이미지 다운로드" },
+                { En, "🖼 Downloading images" },
+                { ZhCn, "🖼 下载图片" },
+                { ZhTw, "🖼 下載圖片" },
+                { Ja, "🖼 画像をダウンロード" },
+                { Vi, "🖼 Tải ảnh minh hoạ" },
+                { Th, "🖼 ดาวน์โหลดภาพ" },
+                { Id, "🖼 Mengunduh gambar" } } },
+            { "progress_tail", new Dictionary<string, string> {
+                { Ko, "완료: {0} | 실패: {1}" },
+                { En, "done: {0} | fail: {1}" },
+                { ZhCn, "完成: {0} | 失败: {1}" },
+                { ZhTw, "完成: {0} | 失敗: {1}" },
+                { Ja, "完了: {0} | 失敗: {1}" },
+                { Vi, "xong: {0} | lỗi: {1}" },
+                { Th, "เสร็จ: {0} | พลาด: {1}" },
+                { Id, "selesai: {0} | gagal: {1}" } } },
+            { "progress_summary_done", new Dictionary<string, string> {
+                { Ko, "✅ {0} 완료! 성공: {1} | 실패: {2} / 총 {3}" },
+                { En, "✅ {0} finished. ok: {1} | fail: {2} / total {3}" },
+                { ZhCn, "✅ {0} 完成! 成功: {1} | 失败: {2} / 共 {3}" },
+                { ZhTw, "✅ {0} 完成! 成功: {1} | 失敗: {2} / 共 {3}" },
+                { Ja, "✅ {0} 完了! 成功: {1} | 失敗: {2} / 計 {3}" },
+                { Vi, "✅ {0} xong! ok: {1} | lỗi: {2} / tổng {3}" },
+                { Th, "✅ {0} เสร็จ! สำเร็จ: {1} | พลาด: {2} / ทั้งหมด {3}" },
+                { Id, "✅ {0} selesai! ok: {1} | gagal: {2} / total {3}" } } },
+            { "progress_summary_cancel", new Dictionary<string, string> {
+                { Ko, "⏹ {0} 중지됨. 성공: {1} | 실패: {2} / 총 {3}" },
+                { En, "⏹ {0} stopped. ok: {1} | fail: {2} / total {3}" },
+                { ZhCn, "⏹ {0} 已停止. 成功: {1} | 失败: {2} / 共 {3}" },
+                { ZhTw, "⏹ {0} 已停止. 成功: {1} | 失敗: {2} / 共 {3}" },
+                { Ja, "⏹ {0} 停止. 成功: {1} | 失敗: {2} / 計 {3}" },
+                { Vi, "⏹ {0} đã dừng. ok: {1} | lỗi: {2} / tổng {3}" },
+                { Th, "⏹ {0} หยุดแล้ว สำเร็จ: {1} | พลาด: {2} / ทั้งหมด {3}" },
+                { Id, "⏹ {0} dihentikan. ok: {1} | gagal: {2} / total {3}" } } },
             { "cancelled", new Dictionary<string, string> {
                 { Ko, "사용자 중지! 지금까지의 진행으로 조립\r\n" },
                 { En, "Stopped by user, packaging current progress\r\n" },
@@ -302,6 +374,12 @@ namespace NovelpiaDownloader
             { "ui_stop_on_error", new Dictionary<string, string> {
                 { Ko, "오류 시 중단" }, { En, "Stop on error" }, { ZhCn, "出错时中断" }, { ZhTw, "出錯時中斷" },
                 { Ja, "エラー時中断" }, { Vi, "Dừng khi lỗi" }, { Th, "หยุดเมื่อพลาด" }, { Id, "Berhenti saat error" } } },
+            { "ui_include_novel_no", new Dictionary<string, string> {
+                { Ko, "파일명에 소설 번호 추가" }, { En, "Add novel ID to filename" }, { ZhCn, "文件名加编号" }, { ZhTw, "檔名加編號" },
+                { Ja, "ファイル名に番号追加" }, { Vi, "Thêm ID vào tên file" }, { Th, "เพิ่มรหัสในชื่อไฟล์" }, { Id, "Tambah ID ke nama file" } } },
+            { "ui_include_chapter_range", new Dictionary<string, string> {
+                { Ko, "파일명에 화수 범위 추가" }, { En, "Add Ep. range to filename" }, { ZhCn, "文件名加话数" }, { ZhTw, "檔名加話數" },
+                { Ja, "ファイル名に話数追加" }, { Vi, "Thêm phạm vi tập vào tên" }, { Th, "เพิ่มช่วงตอนในชื่อ" }, { Id, "Tambah rentang Ep ke nama" } } },
         };
 
         public static string T(string key)
@@ -377,6 +455,8 @@ namespace NovelpiaDownloader
             f.CompressCheck.Text = T("compress");
             f.DownloadImageCheck.Text = T("download_image");
             f.StopOnErrorCheck.Text = T("ui_stop_on_error");
+            f.IncludeNovelNoCheck.Text = T("ui_include_novel_no");
+            f.IncludeChapterRangeCheck.Text = T("ui_include_chapter_range");
 
             f.ThreadLabel.Text = T("ui_threads");
             f.IntervalLabel.Text = T("ui_interval");
@@ -438,6 +518,8 @@ namespace NovelpiaDownloader
             f.CompressCheck.AutoSize = true;
             f.DownloadImageCheck.AutoSize = true;
             f.StopOnErrorCheck.AutoSize = true;
+            f.IncludeNovelNoCheck.AutoSize = true;
+            f.IncludeChapterRangeCheck.AutoSize = true;
 
             f.NoticeCheck.Location = new Point(15, 68);
             f.RemoveBlankCheck.Location = new Point(col2X, 68);
@@ -445,32 +527,34 @@ namespace NovelpiaDownloader
             f.CompressCheck.Location = new Point(col2X, 97);
             f.DownloadImageCheck.Location = new Point(15, 126);
             f.StopOnErrorCheck.Location = new Point(col2X, 126);
+            f.IncludeNovelNoCheck.Location = new Point(15, 155);
+            f.IncludeChapterRangeCheck.Location = new Point(col2X, 155);
 
-            f.OutputDirLabel.Location = new Point(15, 159);
+            f.OutputDirLabel.Location = new Point(15, 188);
             int saveLabelRight = f.OutputDirLabel.Location.X + MeasureWidth(f.OutputDirLabel, f.OutputDirLabel.Text, 8);
             int browseBtnW = MeasureWidth(f.OutputDirButton, f.OutputDirButton.Text, 26);
             if (browseBtnW < 70) browseBtnW = 70;
             int outputRightEdge = f.DownloadGroup.ClientSize.Width - 12;
             f.OutputDirButton.Size = new Size(browseBtnW, 32);
-            f.OutputDirButton.Location = new Point(outputRightEdge - browseBtnW, 156);
-            f.OutputDirText.Location = new Point(saveLabelRight + 4, 156);
+            f.OutputDirButton.Location = new Point(outputRightEdge - browseBtnW, 185);
+            f.OutputDirText.Location = new Point(saveLabelRight + 4, 185);
             f.OutputDirText.Size = new Size(f.OutputDirButton.Location.X - 6 - f.OutputDirText.Location.X, 31);
 
-            f.NovelNoLable.Location = new Point(15, 198);
+            f.NovelNoLable.Location = new Point(15, 227);
             int novelLabelRight = f.NovelNoLable.Location.X + MeasureWidth(f.NovelNoLable, f.NovelNoLable.Text, 8);
-            f.NovelNoText.Location = new Point(novelLabelRight + 4, 195);
+            f.NovelNoText.Location = new Point(novelLabelRight + 4, 224);
             f.NovelNoText.Size = new Size(outputRightEdge - f.NovelNoText.Location.X, 31);
 
-            f.ExtensionLabel.Location = new Point(15, 235);
+            f.ExtensionLabel.Location = new Point(15, 264);
             int extLabelRight = f.ExtensionLabel.Location.X + MeasureWidth(f.ExtensionLabel, f.ExtensionLabel.Text, 8);
-            f.EpubButton.Location = new Point(extLabelRight + 4, 232);
+            f.EpubButton.Location = new Point(extLabelRight + 4, 261);
             int epubRight = f.EpubButton.Location.X + MeasureWidth(f.EpubButton, f.EpubButton.Text, 28);
-            f.TxtButton.Location = new Point(epubRight + 8, 232);
+            f.TxtButton.Location = new Point(epubRight + 8, 261);
 
             int dlBtnW = MeasureWidth(f.DownloadButton, f.DownloadButton.Text, 28);
             if (dlBtnW < 80) dlBtnW = 80;
             f.DownloadButton.Size = new Size(dlBtnW, 36);
-            f.DownloadButton.Location = new Point(outputRightEdge - dlBtnW, 230);
+            f.DownloadButton.Location = new Point(outputRightEdge - dlBtnW, 259);
 
             int dlGroupBottomInner = f.DownloadButton.Location.Y + f.DownloadButton.Size.Height + 18;
 
