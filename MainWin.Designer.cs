@@ -59,6 +59,11 @@
             this.FromNum = new System.Windows.Forms.NumericUpDown();
             this.FromCheck = new System.Windows.Forms.CheckBox();
             this.DownloadButton = new System.Windows.Forms.Button();
+            this.AddToListButton = new System.Windows.Forms.Button();
+            this.DownloadList = new System.Windows.Forms.ListBox();
+            this.QueueDownloadButton = new System.Windows.Forms.Button();
+            this.QueueDeleteAllButton = new System.Windows.Forms.Button();
+            this.QueueDeleteSelectedButton = new System.Windows.Forms.Button();
             this.TxtButton = new System.Windows.Forms.RadioButton();
             this.EpubButton = new System.Windows.Forms.RadioButton();
             this.NovelNoText = new System.Windows.Forms.TextBox();
@@ -187,6 +192,7 @@
             this.DownloadGroup.Controls.Add(this.FromLabel);
             this.DownloadGroup.Controls.Add(this.FromNum);
             this.DownloadGroup.Controls.Add(this.FromCheck);
+            this.DownloadGroup.Controls.Add(this.AddToListButton);
             this.DownloadGroup.Controls.Add(this.DownloadButton);
             this.DownloadGroup.Controls.Add(this.TxtButton);
             this.DownloadGroup.Controls.Add(this.EpubButton);
@@ -499,6 +505,57 @@
             this.ConsoleBox.Size = new System.Drawing.Size(420, 607);
             this.ConsoleBox.TabIndex = 5;
             // 
+            // DownloadList
+            // 
+            this.DownloadList.FormattingEnabled = true;
+            this.DownloadList.IntegralHeight = false;
+            this.DownloadList.ItemHeight = 20;
+            this.DownloadList.Location = new System.Drawing.Point(458, 12);
+            this.DownloadList.Name = "DownloadList";
+            this.DownloadList.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+            this.DownloadList.Size = new System.Drawing.Size(420, 280);
+            this.DownloadList.TabIndex = 50;
+            // 
+            // QueueDeleteAllButton
+            // 
+            this.QueueDeleteAllButton.Location = new System.Drawing.Point(458, 12);
+            this.QueueDeleteAllButton.Name = "QueueDeleteAllButton";
+            this.QueueDeleteAllButton.Size = new System.Drawing.Size(100, 32);
+            this.QueueDeleteAllButton.TabIndex = 51;
+            this.QueueDeleteAllButton.Text = "전체 삭제";
+            this.QueueDeleteAllButton.UseVisualStyleBackColor = true;
+            this.QueueDeleteAllButton.Click += new System.EventHandler(this.QueueDeleteAllButton_Click);
+            // 
+            // QueueDeleteSelectedButton
+            // 
+            this.QueueDeleteSelectedButton.Location = new System.Drawing.Point(564, 12);
+            this.QueueDeleteSelectedButton.Name = "QueueDeleteSelectedButton";
+            this.QueueDeleteSelectedButton.Size = new System.Drawing.Size(100, 32);
+            this.QueueDeleteSelectedButton.TabIndex = 52;
+            this.QueueDeleteSelectedButton.Text = "선택 삭제";
+            this.QueueDeleteSelectedButton.UseVisualStyleBackColor = true;
+            this.QueueDeleteSelectedButton.Click += new System.EventHandler(this.QueueDeleteSelectedButton_Click);
+            // 
+            // QueueDownloadButton
+            // 
+            this.QueueDownloadButton.Location = new System.Drawing.Point(670, 12);
+            this.QueueDownloadButton.Name = "QueueDownloadButton";
+            this.QueueDownloadButton.Size = new System.Drawing.Size(100, 32);
+            this.QueueDownloadButton.TabIndex = 53;
+            this.QueueDownloadButton.Text = "다운로드";
+            this.QueueDownloadButton.UseVisualStyleBackColor = true;
+            this.QueueDownloadButton.Click += new System.EventHandler(this.QueueDownloadButton_Click);
+            // 
+            // AddToListButton
+            // 
+            this.AddToListButton.Location = new System.Drawing.Point(244, 270);
+            this.AddToListButton.Name = "AddToListButton";
+            this.AddToListButton.Size = new System.Drawing.Size(120, 36);
+            this.AddToListButton.TabIndex = 54;
+            this.AddToListButton.Text = "목록에 추가";
+            this.AddToListButton.UseVisualStyleBackColor = true;
+            this.AddToListButton.Click += new System.EventHandler(this.AddToListButton_Click);
+            // 
             // ThreadLabel
             // 
             this.ThreadLabel.AutoSize = true;
@@ -613,6 +670,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(890, 631);
             this.Controls.Add(this.LanguageBox);
+            this.Controls.Add(this.QueueDeleteAllButton);
+            this.Controls.Add(this.QueueDeleteSelectedButton);
+            this.Controls.Add(this.QueueDownloadButton);
+            this.Controls.Add(this.DownloadList);
             this.Controls.Add(this.RetryNum);
             this.Controls.Add(this.RetryLabel);
             this.Controls.Add(this.FontButton);
@@ -666,6 +727,11 @@
         internal System.Windows.Forms.Label ExtensionLabel;
         internal System.Windows.Forms.Label NovelNoLable;
         internal System.Windows.Forms.Button DownloadButton;
+        internal System.Windows.Forms.Button AddToListButton;
+        internal System.Windows.Forms.ListBox DownloadList;
+        internal System.Windows.Forms.Button QueueDownloadButton;
+        internal System.Windows.Forms.Button QueueDeleteAllButton;
+        internal System.Windows.Forms.Button QueueDeleteSelectedButton;
         internal System.Windows.Forms.TextBox ConsoleBox;
         internal System.Windows.Forms.Label ThreadLabel;
         internal System.Windows.Forms.NumericUpDown ThreadNum;

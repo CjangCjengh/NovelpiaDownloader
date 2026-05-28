@@ -88,6 +88,22 @@ namespace NovelpiaDownloader
         private FontMapping font_mapping;
         private volatile bool _running;
         private volatile bool _cancelRequested;
+        private readonly List<DownloadJob> _queue = new List<DownloadJob>();
+        private bool _queueRunning;
+
+        private class DownloadJob
+        {
+            public string novelNo;
+            public string title;
+            public bool saveAsEpub, includeNotice, removeBlank, keepHtml, compress, downloadImage, stopOnError;
+            public bool includeNovelNoInName, includeChapterRangeInName;
+            public bool fromChecked, toChecked;
+            public int fromN, toN;
+            public int retry, threadNum;
+            public float interval;
+            public string outputDir;
+            public string targetPath;
+        }
         private int _progress_total;
         private int _progress_done;
         private int _progress_fail;
@@ -104,56 +120,81 @@ namespace NovelpiaDownloader
                 DownloadButton.Text = Lang.T("btn_stopping");
                 return;
             }
-            bool saveAsEpub = EpubButton.Checked;
-            bool includeNotice = NoticeCheck.Checked;
-            bool removeBlank = RemoveBlankCheck.Checked;
-            bool keepHtml = KeepHtmlCheck.Checked;
-            bool compress = CompressCheck.Checked;
-            bool downloadImage = DownloadImageCheck.Checked;
-            bool stopOnError = StopOnErrorCheck.Checked;
-            bool includeNovelNoInName = IncludeNovelNoCheck.Checked;
-            bool includeChapterRangeInName = IncludeChapterRangeCheck.Checked;
-            int retry = (int)RetryNum.Value;
-            string outputDir = OutputDirText.Text.Trim();
+            var job = BuildJobFromUI();
+            if (job == null) return;
+            if (!ResolveTargetPath(job, askIfMissing: true)) return;
+            StartSingleJob(job, onAllDone: null);
+        }
+
+        private DownloadJob BuildJobFromUI()
+        {
             var noMatch = Regex.Match(NovelNoText.Text ?? "", @"\d+");
-            if (!noMatch.Success)
-                return;
-            string novelNo = noMatch.Value;
-            string ext = saveAsEpub ? ".epub" : ".txt";
-            string targetPath = null;
-            if (!string.IsNullOrEmpty(outputDir) && Directory.Exists(outputDir))
+            if (!noMatch.Success) return null;
+            var job = new DownloadJob
             {
-                string title = FetchNovelTitle(novelNo);
-                if (string.IsNullOrEmpty(title))
-                    title = novelNo;
+                novelNo = noMatch.Value,
+                saveAsEpub = EpubButton.Checked,
+                includeNotice = NoticeCheck.Checked,
+                removeBlank = RemoveBlankCheck.Checked,
+                keepHtml = KeepHtmlCheck.Checked,
+                compress = CompressCheck.Checked,
+                downloadImage = DownloadImageCheck.Checked,
+                stopOnError = StopOnErrorCheck.Checked,
+                includeNovelNoInName = IncludeNovelNoCheck.Checked,
+                includeChapterRangeInName = IncludeChapterRangeCheck.Checked,
+                fromChecked = FromCheck.Checked,
+                toChecked = ToCheck.Checked,
+                fromN = (int)FromNum.Value,
+                toN = (int)ToNum.Value,
+                retry = (int)RetryNum.Value,
+                threadNum = (int)ThreadNum.Value,
+                interval = (float)IntervalNum.Value,
+                outputDir = OutputDirText.Text.Trim(),
+            };
+            return job;
+        }
+
+        private bool ResolveTargetPath(DownloadJob job, bool askIfMissing)
+        {
+            string ext = job.saveAsEpub ? ".epub" : ".txt";
+            if (!string.IsNullOrEmpty(job.outputDir) && Directory.Exists(job.outputDir))
+            {
+                string title = FetchNovelTitle(job.novelNo);
+                if (string.IsNullOrEmpty(title)) title = job.novelNo;
                 foreach (char c in Path.GetInvalidFileNameChars())
                     title = title.Replace(c, '_');
-                if (includeNovelNoInName)
-                    title = $"{novelNo}_{title}";
-                if (includeChapterRangeInName && (FromCheck.Checked || ToCheck.Checked))
+                job.title = title;
+                if (job.includeNovelNoInName)
+                    title = $"{job.novelNo}_{title}";
+                if (job.includeChapterRangeInName && (job.fromChecked || job.toChecked))
                 {
-                    int fromN = FromCheck.Checked ? (int)FromNum.Value : 1;
-                    string toN = ToCheck.Checked ? ((int)ToNum.Value).ToString() : "end";
+                    int fromN = job.fromChecked ? job.fromN : 1;
+                    string toN = job.toChecked ? job.toN.ToString() : "end";
                     title = $"{title}_{fromN}-{toN}";
                 }
-                targetPath = Path.Combine(outputDir, title + ext);
+                job.targetPath = Path.Combine(job.outputDir, title + ext);
+                return true;
             }
-            else
+            if (!askIfMissing) return false;
+            string targetPath = null;
+            using (var sfd = new SaveFileDialog { Filter = job.saveAsEpub ? "|*.epub" : "|*.txt" })
             {
-                SaveFileDialog sfd = new SaveFileDialog
-                {
-                    Filter = saveAsEpub ? "|*.epub" : "|*.txt"
-                };
                 if (sfd.ShowDialog() == DialogResult.OK)
                     targetPath = sfd.FileName;
-                sfd.Dispose();
             }
-            if (targetPath == null)
-                return;
+            if (targetPath == null) return false;
+            job.targetPath = targetPath;
+            if (string.IsNullOrEmpty(job.title))
+                job.title = Path.GetFileNameWithoutExtension(targetPath);
+            return true;
+        }
+
+        private void StartSingleJob(DownloadJob job, Action onAllDone)
+        {
             _running = true;
             _cancelRequested = false;
             DownloadButton.Text = Lang.T("btn_stop");
-            Download(novelNo, saveAsEpub, includeNotice, removeBlank, keepHtml, compress, downloadImage, stopOnError, retry, targetPath);
+            Download(job, onAllDone);
         }
 
         private void OutputDirButton_Click(object sender, EventArgs e)
@@ -166,6 +207,110 @@ namespace NovelpiaDownloader
             if (fbd.ShowDialog() == DialogResult.OK)
                 OutputDirText.Text = fbd.SelectedPath;
             fbd.Dispose();
+        }
+
+        private void AddToListButton_Click(object sender, EventArgs e)
+        {
+            var job = BuildJobFromUI();
+            if (job == null) return;
+            foreach (var existing in _queue)
+            {
+                if (existing.novelNo == job.novelNo &&
+                    existing.fromChecked == job.fromChecked && existing.toChecked == job.toChecked &&
+                    existing.fromN == job.fromN && existing.toN == job.toN &&
+                    existing.saveAsEpub == job.saveAsEpub)
+                {
+                    Log(Lang.T("queue_dup", FormatJobLabel(job)));
+                    return;
+                }
+            }
+            if (string.IsNullOrEmpty(job.title))
+            {
+                string fetched = FetchNovelTitle(job.novelNo);
+                job.title = string.IsNullOrEmpty(fetched) ? job.novelNo : fetched;
+            }
+            _queue.Add(job);
+            DownloadList.Items.Add(FormatJobLabel(job));
+            Log(Lang.T("queue_added", FormatJobLabel(job)));
+        }
+
+        private static string FormatJobLabel(DownloadJob job)
+        {
+            string range;
+            if (job.fromChecked || job.toChecked)
+            {
+                string a = job.fromChecked ? job.fromN.ToString() : "1";
+                string b = job.toChecked ? job.toN.ToString() : "end";
+                range = $"  ({a}-{b})";
+            }
+            else range = "";
+            string ext = job.saveAsEpub ? "epub" : "txt";
+            string title = string.IsNullOrEmpty(job.title) ? job.novelNo : job.title;
+            return $"[{job.novelNo}] {title}{range}  ·  {ext}";
+        }
+
+        private void QueueDeleteAllButton_Click(object sender, EventArgs e)
+        {
+            if (_queueRunning || _running) return;
+            _queue.Clear();
+            DownloadList.Items.Clear();
+        }
+
+        private void QueueDeleteSelectedButton_Click(object sender, EventArgs e)
+        {
+            if (_queueRunning || _running) return;
+            var indices = new List<int>();
+            foreach (int idx in DownloadList.SelectedIndices) indices.Add(idx);
+            indices.Sort();
+            for (int i = indices.Count - 1; i >= 0; i--)
+            {
+                int k = indices[i];
+                if (k < 0 || k >= _queue.Count) continue;
+                _queue.RemoveAt(k);
+                DownloadList.Items.RemoveAt(k);
+            }
+        }
+
+        private void QueueDownloadButton_Click(object sender, EventArgs e)
+        {
+            if (_running || _queueRunning) return;
+            if (_queue.Count == 0) return;
+            _queueRunning = true;
+            QueueDownloadButton.Enabled = false;
+            QueueDeleteAllButton.Enabled = false;
+            QueueDeleteSelectedButton.Enabled = false;
+            AddToListButton.Enabled = false;
+            var snapshot = new List<DownloadJob>(_queue);
+            Log(Lang.T("queue_start", snapshot.Count));
+            RunQueueChain(snapshot, 0);
+        }
+
+        private void RunQueueChain(List<DownloadJob> jobs, int index)
+        {
+            if (index >= jobs.Count || _cancelRequested)
+            {
+                FinishQueue();
+                return;
+            }
+            var job = jobs[index];
+            if (!ResolveTargetPath(job, askIfMissing: false))
+            {
+                Log(Lang.T("queue_skip", FormatJobLabel(job)));
+                RunQueueChain(jobs, index + 1);
+                return;
+            }
+            Log(Lang.T("queue_book_header", index + 1, jobs.Count, FormatJobLabel(job)) + "\r\n");
+            StartSingleJob(job, onAllDone: () => RunQueueChain(jobs, index + 1));
+        }
+
+        private void FinishQueue()
+        {
+            _queueRunning = false;
+            QueueDownloadButton.Enabled = true;
+            QueueDeleteAllButton.Enabled = true;
+            QueueDeleteSelectedButton.Enabled = true;
+            AddToListButton.Enabled = true;
+            Log(Lang.T("queue_done"));
         }
 
         private string FetchNovelTitle(string novelNo)
@@ -182,16 +327,25 @@ namespace NovelpiaDownloader
             }
         }
 
-        void Download(string novelNo, bool saveAsEpub, bool includeNotice, bool removeBlank, bool keepHtml, bool compress, bool downloadImage, bool stopOnError, int retry, string path)
+        void Download(DownloadJob job, Action onAllDone)
         {
+            string novelNo = job.novelNo;
+            bool saveAsEpub = job.saveAsEpub;
+            bool includeNotice = job.includeNotice;
+            bool removeBlank = job.removeBlank;
+            bool keepHtml = job.keepHtml;
+            bool compress = job.compress;
+            bool downloadImage = job.downloadImage;
+            int retry = job.retry;
+            string path = job.targetPath;
             Log(Lang.T("sep") + Lang.T("download_start"));
             string directory = Path.Combine(Path.GetDirectoryName(path), novelNo);
             Directory.CreateDirectory(directory);
-            int thread_num = (int)ThreadNum.Value;
-            float interval = (float)IntervalNum.Value;
-            int from = FromCheck.Checked ? (int)FromNum.Value : 1;
-            int to = ToCheck.Checked ? (int)ToNum.Value : int.MaxValue;
-            _stopOnError = stopOnError;
+            int thread_num = job.threadNum;
+            float interval = job.interval;
+            int from = job.fromChecked ? job.fromN : 1;
+            int to = job.toChecked ? job.toN : int.MaxValue;
+            _stopOnError = job.stopOnError;
             _retryCount = retry;
             _hadFatalError = false;
             Task.Run(() =>
@@ -531,9 +685,10 @@ namespace NovelpiaDownloader
                     Invoke(new Action(() =>
                     {
                         _running = false;
-                        _cancelRequested = false;
                         DownloadButton.Enabled = true;
                         DownloadButton.Text = Lang.T("btn_download");
+                        onAllDone?.Invoke();
+                        _cancelRequested = false;
                     }));
                 }
             });

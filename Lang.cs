@@ -220,6 +220,46 @@ namespace NovelpiaDownloader
                 { Vi, "Đang dừng..." },
                 { Th, "กำลังหยุด..." },
                 { Id, "Menghentikan..." } } },
+            { "btn_add_to_list", new Dictionary<string, string> {
+                { Ko, "목록에 추가" }, { En, "Add to queue" }, { ZhCn, "添加到队列" }, { ZhTw, "加入佇列" },
+                { Ja, "キューに追加" }, { Vi, "Thêm vào hàng đợi" }, { Th, "เพิ่มในคิว" }, { Id, "Tambah ke antrian" } } },
+            { "btn_queue_delete_all", new Dictionary<string, string> {
+                { Ko, "전체 삭제" }, { En, "Clear all" }, { ZhCn, "全部删除" }, { ZhTw, "全部刪除" },
+                { Ja, "すべて削除" }, { Vi, "Xoá tất cả" }, { Th, "ลบทั้งหมด" }, { Id, "Hapus semua" } } },
+            { "btn_queue_delete_selected", new Dictionary<string, string> {
+                { Ko, "선택 삭제" }, { En, "Delete selected" }, { ZhCn, "删除选中" }, { ZhTw, "刪除選取" },
+                { Ja, "選択削除" }, { Vi, "Xoá đã chọn" }, { Th, "ลบที่เลือก" }, { Id, "Hapus pilihan" } } },
+            { "btn_queue_download", new Dictionary<string, string> {
+                { Ko, "다운로드" }, { En, "Download" }, { ZhCn, "下载" }, { ZhTw, "下載" },
+                { Ja, "ダウンロード" }, { Vi, "Tải" }, { Th, "ดาวน์โหลด" }, { Id, "Unduh" } } },
+            { "queue_added", new Dictionary<string, string> {
+                { Ko, "  ➜ 목록에 추가됨: {0}\r\n" }, { En, "  ➜ Added to queue: {0}\r\n" },
+                { ZhCn, "  ➜ 已加入队列: {0}\r\n" }, { ZhTw, "  ➜ 已加入佇列: {0}\r\n" },
+                { Ja, "  ➜ キューに追加: {0}\r\n" }, { Vi, "  ➜ Đã thêm vào hàng đợi: {0}\r\n" },
+                { Th, "  ➜ เพิ่มเข้าคิวแล้ว: {0}\r\n" }, { Id, "  ➜ Ditambahkan ke antrian: {0}\r\n" } } },
+            { "queue_dup", new Dictionary<string, string> {
+                { Ko, "  ⚠ 이미 목록에 있음: {0}\r\n" }, { En, "  ⚠ Already in queue: {0}\r\n" },
+                { ZhCn, "  ⚠ 已在队列中: {0}\r\n" }, { ZhTw, "  ⚠ 已在佇列中: {0}\r\n" },
+                { Ja, "  ⚠ 既にキューにあります: {0}\r\n" }, { Vi, "  ⚠ Đã có trong hàng đợi: {0}\r\n" },
+                { Th, "  ⚠ มีในคิวอยู่แล้ว: {0}\r\n" }, { Id, "  ⚠ Sudah ada di antrian: {0}\r\n" } } },
+            { "queue_skip", new Dictionary<string, string> {
+                { Ko, "  ⚠ 저장 경로 없음, 건너뜀: {0}\r\n" }, { En, "  ⚠ No save path, skipped: {0}\r\n" },
+                { ZhCn, "  ⚠ 无保存路径,已跳过: {0}\r\n" }, { ZhTw, "  ⚠ 無保存路徑,已跳過: {0}\r\n" },
+                { Ja, "  ⚠ 保存先未指定、スキップ: {0}\r\n" }, { Vi, "  ⚠ Chưa đặt đường dẫn, bỏ qua: {0}\r\n" },
+                { Th, "  ⚠ ไม่มีพาธ ข้ามไป: {0}\r\n" }, { Id, "  ⚠ Tanpa jalur simpan, dilewati: {0}\r\n" } } },
+            { "queue_start", new Dictionary<string, string> {
+                { Ko, "📚 일괄 다운로드 시작! (총 {0}권)\r\n" }, { En, "📚 Batch download start! (total {0})\r\n" },
+                { ZhCn, "📚 批量下载开始! (共 {0} 本)\r\n" }, { ZhTw, "📚 批次下載開始! (共 {0} 本)\r\n" },
+                { Ja, "📚 一括ダウンロード開始! (計 {0}冊)\r\n" }, { Vi, "📚 Bắt đầu tải hàng loạt! (tổng {0})\r\n" },
+                { Th, "📚 เริ่มดาวน์โหลดชุด! (ทั้งหมด {0})\r\n" }, { Id, "📚 Mulai unduh massal! (total {0})\r\n" } } },
+            { "queue_done", new Dictionary<string, string> {
+                { Ko, "🎉 일괄 다운로드 완료!\r\n" }, { En, "🎉 Batch download finished!\r\n" },
+                { ZhCn, "🎉 批量下载完成!\r\n" }, { ZhTw, "🎉 批次下載完成!\r\n" },
+                { Ja, "🎉 一括ダウンロード完了!\r\n" }, { Vi, "🎉 Hoàn tất tải hàng loạt!\r\n" },
+                { Th, "🎉 ดาวน์โหลดชุดเสร็จสิ้น!\r\n" }, { Id, "🎉 Unduh massal selesai!\r\n" } } },
+            { "queue_book_header", new Dictionary<string, string> {
+                { Ko, "[{0}/{1}] {2}" }, { En, "[{0}/{1}] {2}" }, { ZhCn, "[{0}/{1}] {2}" }, { ZhTw, "[{0}/{1}] {2}" },
+                { Ja, "[{0}/{1}] {2}" }, { Vi, "[{0}/{1}] {2}" }, { Th, "[{0}/{1}] {2}" }, { Id, "[{0}/{1}] {2}" } } },
             { "fetching_chapters", new Dictionary<string, string> {
                 { Ko, "📖 챕터 목록 가져오는 중..." },
                 { En, "📖 Fetching episode list..." },
@@ -441,6 +481,10 @@ namespace NovelpiaDownloader
             f.NovelNoLable.Text = T("ui_novel_no");
             f.ExtensionLabel.Text = T("ui_extension");
             f.DownloadButton.Text = T("btn_download");
+            f.AddToListButton.Text = T("btn_add_to_list");
+            f.QueueDeleteAllButton.Text = T("btn_queue_delete_all");
+            f.QueueDeleteSelectedButton.Text = T("btn_queue_delete_selected");
+            f.QueueDownloadButton.Text = T("btn_queue_download");
 
             f.FontLabel.Text = T("ui_char_map");
             f.FontButton.Text = T("ui_open");
@@ -492,6 +536,8 @@ namespace NovelpiaDownloader
             f.LanguageBox.Size = new Size(leftHalf, f.LanguageBox.Size.Height);
             f.ConsoleBox.Location = new Point(rightX, f.ConsoleBox.Location.Y);
             f.ConsoleBox.Size = new Size(rightW, f.ConsoleBox.Size.Height);
+            f.DownloadList.Location = new Point(rightX, f.DownloadList.Location.Y);
+            f.DownloadList.Size = new Size(rightW, f.DownloadList.Size.Height);
 
             int dlInnerW = f.DownloadGroup.ClientSize.Width;
             int col2X = dlInnerW / 2;
@@ -555,6 +601,11 @@ namespace NovelpiaDownloader
             if (dlBtnW < 80) dlBtnW = 80;
             f.DownloadButton.Size = new Size(dlBtnW, 36);
             f.DownloadButton.Location = new Point(outputRightEdge - dlBtnW, 259);
+
+            int addBtnW = MeasureWidth(f.AddToListButton, f.AddToListButton.Text, 28);
+            if (addBtnW < 80) addBtnW = 80;
+            f.AddToListButton.Size = new Size(addBtnW, 36);
+            f.AddToListButton.Location = new Point(f.DownloadButton.Location.X - 8 - addBtnW, 259);
 
             int dlGroupBottomInner = f.DownloadButton.Location.Y + f.DownloadButton.Size.Height + 18;
 
@@ -628,8 +679,34 @@ namespace NovelpiaDownloader
             int dlGroupH = dlGroupBottomInner > dlGroupAvailableH ? dlGroupBottomInner : dlGroupAvailableH;
             f.DownloadGroup.Size = new Size(f.DownloadGroup.Size.Width, dlGroupH);
 
-            int consoleBottom = f.DownloadGroup.Location.Y + f.DownloadGroup.Size.Height;
-            f.ConsoleBox.Size = new Size(f.ConsoleBox.Size.Width, consoleBottom - f.ConsoleBox.Location.Y);
+            int rightTop = f.LanguageBox.Location.Y;
+            int rightBottom = f.DownloadGroup.Location.Y + f.DownloadGroup.Size.Height;
+            int rightTotalH = rightBottom - rightTop;
+            const int rightSplitGap = 8;
+            const int queueBtnH = 32;
+            int qBtn1W = MeasureWidth(f.QueueDeleteAllButton, f.QueueDeleteAllButton.Text, 28);
+            int qBtn2W = MeasureWidth(f.QueueDeleteSelectedButton, f.QueueDeleteSelectedButton.Text, 28);
+            int qBtn3W = MeasureWidth(f.QueueDownloadButton, f.QueueDownloadButton.Text, 28);
+            if (qBtn1W < 80) qBtn1W = 80;
+            if (qBtn2W < 80) qBtn2W = 80;
+            if (qBtn3W < 80) qBtn3W = 80;
+            f.QueueDeleteAllButton.Size = new Size(qBtn1W, queueBtnH);
+            f.QueueDeleteSelectedButton.Size = new Size(qBtn2W, queueBtnH);
+            f.QueueDownloadButton.Size = new Size(qBtn3W, queueBtnH);
+            f.QueueDeleteAllButton.Location = new Point(rightX, rightTop);
+            f.QueueDeleteSelectedButton.Location = new Point(rightX + qBtn1W + 6, rightTop);
+            f.QueueDownloadButton.Location = new Point(rightX + qBtn1W + 6 + qBtn2W + 6, rightTop);
+            int halfH = (rightTotalH - rightSplitGap) / 2;
+            int listTop = rightTop + queueBtnH + 6;
+            int listH = halfH - queueBtnH - 6;
+            if (listH < 60) listH = 60;
+            f.DownloadList.Location = new Point(rightX, listTop);
+            f.DownloadList.Size = new Size(rightW, listH);
+            int consoleTop = rightTop + halfH + rightSplitGap;
+            int consoleH = rightBottom - consoleTop;
+            if (consoleH < 60) consoleH = 60;
+            f.ConsoleBox.Location = new Point(rightX, consoleTop);
+            f.ConsoleBox.Size = new Size(rightW, consoleH);
 
             int desiredClientH = dlGroupY + dlGroupBottomInner + 12;
             int formExtraH = f.Height - f.ClientSize.Height;
