@@ -19,6 +19,7 @@ namespace NovelpiaDownloader
         {
             InitializeComponent();
             novelpia = new Novelpia();
+            this.SizeChanged += (s, e) => Lang.Relayout(this);
 
             string lang = Lang.Ko;
             if (File.Exists("config.json"))

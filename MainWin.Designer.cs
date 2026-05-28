@@ -171,8 +171,6 @@
             this.DownloadGroup.Controls.Add(this.StopOnErrorCheck);
             this.DownloadGroup.Controls.Add(this.DownloadImageCheck);
             this.DownloadGroup.Controls.Add(this.CompressCheck);
-            this.DownloadGroup.Controls.Add(this.RetryNum);
-            this.DownloadGroup.Controls.Add(this.RetryLabel);
             this.DownloadGroup.Controls.Add(this.KeepHtmlCheck);
             this.DownloadGroup.Controls.Add(this.RemoveBlankCheck);
             this.DownloadGroup.Controls.Add(this.OutputDirButton);
@@ -465,8 +463,8 @@
             // 
             // ConsoleBox
             // 
-            this.ConsoleBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.ConsoleBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ConsoleBox.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.ConsoleBox.Location = new System.Drawing.Point(458, 12);
@@ -510,7 +508,7 @@
             this.IntervalLabel.Name = "IntervalLabel";
             this.IntervalLabel.Size = new System.Drawing.Size(48, 25);
             this.IntervalLabel.TabIndex = 13;
-            this.IntervalLabel.Text = "간격";
+            this.IntervalLabel.Text = "간격 (초)";
             // 
             // SecondLabel
             // 
@@ -519,7 +517,7 @@
             this.SecondLabel.Name = "SecondLabel";
             this.SecondLabel.Size = new System.Drawing.Size(30, 25);
             this.SecondLabel.TabIndex = 14;
-            this.SecondLabel.Text = "초";
+            this.SecondLabel.Text = "";
             // 
             // IntervalNum
             // 
@@ -591,6 +589,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(890, 631);
             this.Controls.Add(this.LanguageBox);
+            this.Controls.Add(this.RetryNum);
+            this.Controls.Add(this.RetryLabel);
             this.Controls.Add(this.FontButton);
             this.Controls.Add(this.FontLabel);
             this.Controls.Add(this.FontBox);
