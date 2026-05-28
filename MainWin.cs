@@ -47,6 +47,8 @@ namespace NovelpiaDownloader
                     CompressCheck.Checked = config_dict["compress"];
                 if (config_dict.ContainsKey("download_image"))
                     DownloadImageCheck.Checked = config_dict["download_image"];
+                if (config_dict.ContainsKey("stop_on_error"))
+                    StopOnErrorCheck.Checked = config_dict["stop_on_error"];
                 if (config_dict.ContainsKey("email") && config_dict.ContainsKey("wd"))
                     if (novelpia.Login(EmailText.Text = config_dict["email"], PasswordText.Text = config_dict["wd"]))
                     {
@@ -97,9 +99,13 @@ namespace NovelpiaDownloader
             bool keepHtml = KeepHtmlCheck.Checked;
             bool compress = CompressCheck.Checked;
             bool downloadImage = DownloadImageCheck.Checked;
+            bool stopOnError = StopOnErrorCheck.Checked;
             int retry = (int)RetryNum.Value;
             string outputDir = OutputDirText.Text.Trim();
-            string novelNo = NovelNoText.Text;
+            var noMatch = Regex.Match(NovelNoText.Text ?? "", @"\d+");
+            if (!noMatch.Success)
+                return;
+            string novelNo = noMatch.Value;
             string ext = saveAsEpub ? ".epub" : ".txt";
             string targetPath = null;
             if (!string.IsNullOrEmpty(outputDir) && Directory.Exists(outputDir))
@@ -126,7 +132,7 @@ namespace NovelpiaDownloader
             _running = true;
             _cancelRequested = false;
             DownloadButton.Text = Lang.T("btn_stop");
-            Download(novelNo, saveAsEpub, includeNotice, removeBlank, keepHtml, compress, downloadImage, retry, targetPath);
+            Download(novelNo, saveAsEpub, includeNotice, removeBlank, keepHtml, compress, downloadImage, stopOnError, retry, targetPath);
         }
 
         private void OutputDirButton_Click(object sender, EventArgs e)
@@ -155,7 +161,7 @@ namespace NovelpiaDownloader
             }
         }
 
-        void Download(string novelNo, bool saveAsEpub, bool includeNotice, bool removeBlank, bool keepHtml, bool compress, bool downloadImage, int retry, string path)
+        void Download(string novelNo, bool saveAsEpub, bool includeNotice, bool removeBlank, bool keepHtml, bool compress, bool downloadImage, bool stopOnError, int retry, string path)
         {
             Log(Lang.T("sep") + Lang.T("download_start"));
             string directory = Path.Combine(Path.GetDirectoryName(path), novelNo);
@@ -164,13 +170,16 @@ namespace NovelpiaDownloader
             float interval = (float)IntervalNum.Value;
             int from = FromCheck.Checked ? (int)FromNum.Value : 1;
             int to = ToCheck.Checked ? (int)ToNum.Value : int.MaxValue;
+            _stopOnError = stopOnError;
+            _retryCount = retry;
+            _hadFatalError = false;
             Task.Run(() =>
             {
                 try
                 {
                     string novelPageHtml = (saveAsEpub || includeNotice) ? GetRequest($"https://novelpia.com/novel/{novelNo}", novelpia.loginkey) : null;
                     int page = 0;
-                    var chapterIds = new List<string>();
+                    var seenChapterIds = new HashSet<string>();
                     var chapterNames = new List<(string, string)>();
                     List<Thread> threads = new List<Thread>();
                     if (includeNotice && novelPageHtml != null)
@@ -188,9 +197,8 @@ namespace NovelpiaDownloader
                                 string capturedName = chapterName;
                                 string capturedId = chapterId;
                                 string capturedPath = jsonPath;
-                                threads.Add(new Thread(() => DownloadChapter(capturedId, capturedName, capturedPath, true, 0, retry)));
+                                threads.Add(new Thread(() => DownloadChapter(capturedId, capturedName, capturedPath, true, 0)));
                                 chapterNames.Add((HttpUtility.HtmlEncode($"[{Lang.T("notice")}] {chapterName}"), jsonPath));
-                                chapterIds.Add(chapterId);
                                 noticeNo++;
                             }
                         }
@@ -204,11 +212,14 @@ namespace NovelpiaDownloader
                         var chapters = Regex.Matches(resp, @"id=""bookmark_(\d+)""></i>(.+?)</b>.+?>EP\.(\d+)<");
                         if (chapters.Count == 0)
                             break;
-                        if (chapterIds.Contains(chapters[0].Groups[1].Value))
+                        if (seenChapterIds.Contains(chapters[0].Groups[1].Value))
                             break;
                         foreach (Match chapter in chapters)
                         {
                             int chapterNo = int.Parse(chapter.Groups[3].Value);
+                            string chapterId = chapter.Groups[1].Value;
+                            if (!seenChapterIds.Add(chapterId))
+                                continue;
                             if (chapterNo < from)
                                 continue;
                             if (chapterNo > to)
@@ -216,13 +227,11 @@ namespace NovelpiaDownloader
                                 get_content = false;
                                 break;
                             }
-                            string chapterId = chapter.Groups[1].Value;
                             string chapterName = chapter.Groups[2].Value;
                             string jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
                             int capturedNo = chapterNo;
-                            threads.Add(new Thread(() => DownloadChapter(chapterId, chapterName, jsonPath, false, capturedNo, retry)));
+                            threads.Add(new Thread(() => DownloadChapter(chapterId, chapterName, jsonPath, false, capturedNo)));
                             chapterNames.Add((HttpUtility.HtmlEncode(chapterName), jsonPath));
-                            chapterIds.Add(chapterId);
                         }
                         page++;
                     }
@@ -231,6 +240,8 @@ namespace NovelpiaDownloader
                     threads.Clear();
                     if (_cancelRequested)
                         Log(Lang.T("cancelled"));
+                    else if (_hadFatalError)
+                        Log(Lang.T("stop_on_error"));
 
                     if (saveAsEpub)
                     {
@@ -444,8 +455,14 @@ namespace NovelpiaDownloader
             });
         }
 
-        private void DownloadChapter(string chapterId, string chapterName, string jsonPath, bool isNotice, int epNo, int retry)
+        private volatile bool _stopOnError;
+        private volatile bool _hadFatalError;
+        private int _retryCount;
+
+        private void DownloadChapter(string chapterId, string chapterName, string jsonPath, bool isNotice, int epNo)
         {
+            if (_cancelRequested || _hadFatalError) return;
+            int retry = _retryCount;
             string referer = $"https://novelpia.com/viewer/{chapterId}";
             for (int attempt = 0; attempt <= retry; attempt++)
             {
@@ -464,7 +481,10 @@ namespace NovelpiaDownloader
                     if (attempt < retry)
                         Log(Lang.T("chapter_retry", attempt + 1, retry));
                     else
+                    {
                         Log(isNotice ? Lang.T("notice_fail", chapterName) : Lang.T("chapter_fail", epNo, chapterName));
+                        if (_stopOnError) _hadFatalError = true;
+                    }
                 }
             }
         }
@@ -557,14 +577,14 @@ namespace NovelpiaDownloader
         {
             for (int i = 0; i < threads.Count; i += batch_size)
             {
-                if (_cancelRequested) break;
+                if (_cancelRequested || _hadFatalError) break;
                 int remain = threads.Count - i;
                 int limit = batch_size < remain ? batch_size : remain;
                 for (int j = 0; j < limit; j++)
                     threads[i + j].Start();
                 for (int j = 0; j < limit; j++)
                     threads[i + j].Join();
-                if (_cancelRequested) break;
+                if (_cancelRequested || _hadFatalError) break;
                 Thread.Sleep((int)(interval * 1000));
             }
         }
@@ -642,7 +662,8 @@ namespace NovelpiaDownloader
                 { "keep_html", KeepHtmlCheck.Checked },
                 { "retry_num", RetryNum.Value },
                 { "compress", CompressCheck.Checked },
-                { "download_image", DownloadImageCheck.Checked }
+                { "download_image", DownloadImageCheck.Checked },
+                { "stop_on_error", StopOnErrorCheck.Checked }
             };
             using (StreamWriter sw = new StreamWriter("config.json"))
             {

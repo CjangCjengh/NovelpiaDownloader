@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Drawing;
+using System.Windows.Forms;
 
 namespace NovelpiaDownloader
 {
@@ -193,7 +194,7 @@ namespace NovelpiaDownloader
                 { Th, "ดาวน์โหลดรูป" },
                 { Id, "Unduh gambar" } } },
             { "btn_download", new Dictionary<string, string> {
-                { Ko, "다운\r\n로드" },
+                { Ko, "다운로드" },
                 { En, "Start" },
                 { ZhCn, "下载" },
                 { ZhTw, "下載" },
@@ -228,6 +229,15 @@ namespace NovelpiaDownloader
                 { Vi, "Đã dừng theo yêu cầu, đóng gói phần đã tải\r\n" },
                 { Th, "ผู้ใช้หยุดเอง กำลังประกอบจากที่ดาวน์โหลดแล้ว\r\n" },
                 { Id, "Dihentikan pengguna, mengemas progres saat ini\r\n" } } },
+            { "stop_on_error", new Dictionary<string, string> {
+                { Ko, "오류 발생으로 중단! 지금까지의 진행으로 조립\r\n" },
+                { En, "Stopping on error, packaging current progress\r\n" },
+                { ZhCn, "出错已停止,按当前进度组装\r\n" },
+                { ZhTw, "出錯已停止,按目前進度組裝\r\n" },
+                { Ja, "エラーで停止。現在の進捗でパッケージ化します\r\n" },
+                { Vi, "Dừng do lỗi, đóng gói phần đã tải\r\n" },
+                { Th, "หยุดเพราะข้อผิดพลาด กำลังประกอบจากที่ดาวน์โหลดแล้ว\r\n" },
+                { Id, "Berhenti karena error, mengemas progres saat ini\r\n" } } },
 
             // 控件文本(供 Apply 使用)
             { "ui_login_group", new Dictionary<string, string> {
@@ -270,7 +280,7 @@ namespace NovelpiaDownloader
                 { Ko, "저장 경로" }, { En, "Save to" }, { ZhCn, "保存路径" }, { ZhTw, "儲存路徑" },
                 { Ja, "保存先" }, { Vi, "Lưu vào" }, { Th, "บันทึกไปที่" }, { Id, "Simpan ke" } } },
             { "ui_browse", new Dictionary<string, string> {
-                { Ko, "찾아보기" }, { En, "Browse" }, { ZhCn, "选择" }, { ZhTw, "選擇" },
+                { Ko, "선택" }, { En, "Browse" }, { ZhCn, "选择" }, { ZhTw, "選擇" },
                 { Ja, "選択" }, { Vi, "Chọn" }, { Th, "เลือก" }, { Id, "Pilih" } } },
             { "ui_strip_blanks", new Dictionary<string, string> {
                 { Ko, "빈 줄 제거" }, { En, "Strip blanks" }, { ZhCn, "去除空行" }, { ZhTw, "去除空行" },
@@ -282,14 +292,17 @@ namespace NovelpiaDownloader
                 { Ko, "재시도" }, { En, "Retry" }, { ZhCn, "重试" }, { ZhTw, "重試" },
                 { Ja, "再試行" }, { Vi, "Thử lại" }, { Th, "ลองใหม่" }, { Id, "Coba ulang" } } },
             { "ui_threads", new Dictionary<string, string> {
-                { Ko, "스레드 수" }, { En, "threads" }, { ZhCn, "线程数" }, { ZhTw, "執行緒數" },
-                { Ja, "スレッド数" }, { Vi, "luồng" }, { Th, "เธรด" }, { Id, "utas" } } },
+                { Ko, "스레드" }, { En, "threads" }, { ZhCn, "线程" }, { ZhTw, "執行緒" },
+                { Ja, "スレッド" }, { Vi, "luồng" }, { Th, "เธรด" }, { Id, "utas" } } },
             { "ui_interval", new Dictionary<string, string> {
                 { Ko, "간격" }, { En, "" }, { ZhCn, "间隔" }, { ZhTw, "間隔" },
                 { Ja, "間隔" }, { Vi, "" }, { Th, "" }, { Id, "" } } },
             { "ui_second", new Dictionary<string, string> {
-                { Ko, "초" }, { En, "sec interval" }, { ZhCn, "秒" }, { ZhTw, "秒" },
-                { Ja, "秒" }, { Vi, "giây/lần" }, { Th, "วิ/รอบ" }, { Id, "dtk/jeda" } } },
+                { Ko, "초" }, { En, "sec" }, { ZhCn, "秒" }, { ZhTw, "秒" },
+                { Ja, "秒" }, { Vi, "giây" }, { Th, "วิ" }, { Id, "dtk" } } },
+            { "ui_stop_on_error", new Dictionary<string, string> {
+                { Ko, "오류 시 중단" }, { En, "Stop on error" }, { ZhCn, "出错时中断" }, { ZhTw, "出錯時中斷" },
+                { Ja, "エラー時中断" }, { Vi, "Dừng khi lỗi" }, { Th, "หยุดเมื่อพลาด" }, { Id, "Berhenti saat error" } } },
         };
 
         public static string T(string key)
@@ -310,10 +323,26 @@ namespace NovelpiaDownloader
             return string.Format(T(key), args);
         }
 
-        // 中日韩三语共享 "Cjk" 紧凑布局; 英越泰印 共享 "Latin" 长文本布局
-        static bool IsCjk(string lang)
+        // 各语言对应的窗体字体
+        static string FontFor(string lang)
         {
-            return lang == Ko || lang == ZhCn || lang == ZhTw || lang == Ja;
+            switch (lang)
+            {
+                case Ko: return "Malgun Gothic";
+                case Ja: return "Yu Gothic UI";
+                case ZhCn: return "Microsoft YaHei UI";
+                case ZhTw: return "Microsoft JhengHei UI";
+                case Th: return "Leelawadee UI";
+                default: return "Segoe UI";
+            }
+        }
+
+        // 测量文本实际像素宽度,使按钮宽度自适应
+        static int MeasureWidth(Control c, string text, int padding)
+        {
+            if (string.IsNullOrEmpty(text)) return padding;
+            var sz = TextRenderer.MeasureText(text, c.Font);
+            return sz.Width + padding;
         }
 
         public static void Apply(MainWin f, string lang)
@@ -322,9 +351,15 @@ namespace NovelpiaDownloader
             bool known = false;
             foreach (var c in Codes) if (c == lang) { known = true; break; }
             Current = known ? lang : Ko;
-            bool cjk = IsCjk(Current);
 
-            // ------- 文案(由 Lang.T 自动按 Current 取值) -------
+            // 切换字体(整个窗体 + 控制台共用同一字体)
+            string uiFontName = FontFor(Current);
+            float uiSize = f.Font.Size;
+            var newFont = new Font(uiFontName, uiSize, FontStyle.Regular, GraphicsUnit.Point);
+            f.Font = newFont;
+            f.ConsoleBox.Font = newFont;
+
+            // 文案
             f.LoginGroup.Text = T("ui_login_group");
             f.LoginButton1.Text = T("ui_login_btn");
             f.LoginButton2.Text = T("ui_login_btn");
@@ -348,73 +383,149 @@ namespace NovelpiaDownloader
             f.RetryLabel.Text = T("ui_retry");
             f.CompressCheck.Text = T("compress");
             f.DownloadImageCheck.Text = T("download_image");
+            f.StopOnErrorCheck.Text = T("ui_stop_on_error");
 
             f.ThreadLabel.Text = T("ui_threads");
             f.IntervalLabel.Text = T("ui_interval");
             f.SecondLabel.Text = T("ui_second");
 
-            // ------- 布局(只有两套:CJK 紧凑 / Latin 自适应) -------
-            f.NovelNoLable.Location = new Point(11, 70);
-            f.EmailLabel.Location = new Point(cjk ? 21 : 27, 33);
-            f.PasswordLabel.Location = new Point(cjk ? 12 : 10, 70);
+            // ===== 布局 =====
+            // DownloadGroup 内自上而下:
+            // (1) 章节范围: y=30
+            // (2) 公告/去空行/保留HTML/EPUB压缩/下载图片/出错中止/重试 — 4 行勾选块: y=68/97/126/155
+            // (3) 保存路径(与浏览按钮): y=190
+            // (4) 小说编号: y=232
+            // (5) 格式 + 下载按钮: y=270
 
-            f.NoticeCheck.Location = new Point(25, 144);
-            f.OutputDirLabel.Location = new Point(20, 178);
+            // 章节范围: 统一布局(KeepCheck 自带文字,无独立 Label)
+            f.FromCheck.AutoSize = true;
+            f.FromCheck.Text = T("ui_from_ep");
+            f.FromCheck.Location = new Point(15, 33);
+            int fromCheckRight = f.FromCheck.Location.X + MeasureWidth(f.FromCheck, f.FromCheck.Text, 24);
+            f.FromNum.Location = new Point(fromCheckRight + 4, 30);
+            f.FromNum.Size = new Size(70, 31);
+            f.FromLabel.Visible = false;
 
-            f.RemoveBlankCheck.Location = new Point(10, 215);
-            f.KeepHtmlCheck.Location = new Point(cjk ? 135 : 150, 215);
-            f.RetryLabel.Location = new Point(cjk ? 285 : 290, 218);
-            f.RetryNum.Location = new Point(360, 215);
-            f.CompressCheck.Location = new Point(10, 252);
-            f.DownloadImageCheck.Location = new Point(cjk ? 135 : 150, 252);
+            f.ToCheck.AutoSize = true;
+            f.ToCheck.Text = T("ui_to_ep");
+            f.ToCheck.Location = new Point(220, 33);
+            int toCheckRight = f.ToCheck.Location.X + MeasureWidth(f.ToCheck, f.ToCheck.Text, 24);
+            f.ToNum.Location = new Point(toCheckRight + 4, 30);
+            f.ToNum.Size = new Size(70, 31);
+            f.ToLabel.Visible = false;
 
-            if (cjk)
+            // 勾选框块: 2 列 × 4 行, 行距 29
+            f.NoticeCheck.AutoSize = true;
+            f.RemoveBlankCheck.AutoSize = true;
+            f.KeepHtmlCheck.AutoSize = true;
+            f.CompressCheck.AutoSize = true;
+            f.DownloadImageCheck.AutoSize = true;
+            f.StopOnErrorCheck.AutoSize = true;
+
+            f.NoticeCheck.Location = new Point(15, 68);
+            f.RemoveBlankCheck.Location = new Point(220, 68);
+            f.KeepHtmlCheck.Location = new Point(15, 97);
+            f.CompressCheck.Location = new Point(220, 97);
+            f.DownloadImageCheck.Location = new Point(15, 126);
+            f.StopOnErrorCheck.Location = new Point(220, 126);
+
+            // 第 4 行:重试次数
+            f.RetryLabel.Location = new Point(15, 158);
+            int retryLabelRight = f.RetryLabel.Location.X + MeasureWidth(f.RetryLabel, f.RetryLabel.Text, 8);
+            f.RetryNum.Location = new Point(retryLabelRight + 4, 155);
+            f.RetryNum.Size = new Size(70, 31);
+
+            // 保存路径行: y=190
+            f.OutputDirLabel.Location = new Point(15, 193);
+            int saveLabelRight = f.OutputDirLabel.Location.X + MeasureWidth(f.OutputDirLabel, f.OutputDirLabel.Text, 8);
+            int browseBtnW = MeasureWidth(f.OutputDirButton, f.OutputDirButton.Text, 26);
+            if (browseBtnW < 70) browseBtnW = 70;
+            int outputRightEdge = f.DownloadGroup.ClientSize.Width - 12;
+            f.OutputDirButton.Size = new Size(browseBtnW, 32);
+            f.OutputDirButton.Location = new Point(outputRightEdge - browseBtnW, 190);
+            f.OutputDirText.Location = new Point(saveLabelRight + 4, 190);
+            f.OutputDirText.Size = new Size(f.OutputDirButton.Location.X - 6 - f.OutputDirText.Location.X, 31);
+
+            // 小说编号: y=232
+            f.NovelNoLable.Location = new Point(15, 235);
+            int novelLabelRight = f.NovelNoLable.Location.X + MeasureWidth(f.NovelNoLable, f.NovelNoLable.Text, 8);
+            f.NovelNoText.Location = new Point(novelLabelRight + 4, 232);
+            f.NovelNoText.Size = new Size(outputRightEdge - f.NovelNoText.Location.X, 31);
+
+            // 格式 + 下载按钮: y=270 / y=265
+            f.ExtensionLabel.Location = new Point(15, 273);
+            int extLabelRight = f.ExtensionLabel.Location.X + MeasureWidth(f.ExtensionLabel, f.ExtensionLabel.Text, 8);
+            f.EpubButton.Location = new Point(extLabelRight + 4, 270);
+            int epubRight = f.EpubButton.Location.X + MeasureWidth(f.EpubButton, f.EpubButton.Text, 28);
+            f.TxtButton.Location = new Point(epubRight + 8, 270);
+
+            int dlBtnW = MeasureWidth(f.DownloadButton, f.DownloadButton.Text, 28);
+            if (dlBtnW < 80) dlBtnW = 80;
+            f.DownloadButton.Size = new Size(dlBtnW, 36);
+            f.DownloadButton.Location = new Point(outputRightEdge - dlBtnW, 268);
+
+            // 下载组高度自适应
+            f.DownloadGroup.Size = new Size(f.DownloadGroup.Size.Width, 318);
+
+            // LoginGroup 内: Email/Password 标签宽度根据文本测量
+            int emailLabW = MeasureWidth(f.EmailLabel, f.EmailLabel.Text, 0);
+            int pwdLabW = MeasureWidth(f.PasswordLabel, f.PasswordLabel.Text, 0);
+            int keyLabW = MeasureWidth(f.LoginkeyLabel, f.LoginkeyLabel.Text, 0);
+            int loginLabMax = System.Math.Max(System.Math.Max(emailLabW, pwdLabW), keyLabW);
+            int loginInputX = 12 + loginLabMax + 8;
+            int loginGroupRight = f.LoginGroup.ClientSize.Width - 12;
+            int loginBtnW = MeasureWidth(f.LoginButton1, f.LoginButton1.Text, 26);
+            if (loginBtnW < 75) loginBtnW = 75;
+            f.LoginButton1.Size = new Size(loginBtnW, 68);
+            f.LoginButton2.Size = new Size(loginBtnW, 36);
+            f.LoginButton1.Location = new Point(loginGroupRight - loginBtnW, 30);
+            f.LoginButton2.Location = new Point(loginGroupRight - loginBtnW, 104);
+            int loginInputW = f.LoginButton1.Location.X - 8 - loginInputX;
+
+            f.EmailLabel.Location = new Point(12, 33);
+            f.EmailText.Location = new Point(loginInputX, 30);
+            f.EmailText.Size = new Size(loginInputW, 31);
+            f.PasswordLabel.Location = new Point(12, 70);
+            f.PasswordText.Location = new Point(loginInputX, 67);
+            f.PasswordText.Size = new Size(loginInputW, 31);
+            f.LoginkeyLabel.Location = new Point(12, 110);
+            f.LoginkeyText.Location = new Point(loginInputX, 107);
+            f.LoginkeyText.Size = new Size(loginInputW, 31);
+
+            // FontLabel/FontBox/FontButton 自适应
+            int fontLabRight = 19 + MeasureWidth(f.FontLabel, f.FontLabel.Text, 8);
+            int fontBtnW = MeasureWidth(f.FontButton, f.FontButton.Text, 26);
+            if (fontBtnW < 70) fontBtnW = 70;
+            f.FontButton.Size = new Size(fontBtnW, 36);
+            int formClient = f.ClientSize.Width;
+            int fontRightEdge = f.DownloadGroup.Location.X + f.DownloadGroup.Size.Width - 12;
+            f.FontButton.Location = new Point(fontRightEdge - fontBtnW, f.FontLabel.Location.Y - 6);
+            f.FontBox.Location = new Point(fontLabRight + 4, f.FontLabel.Location.Y - 3);
+            f.FontBox.Size = new Size(f.FontButton.Location.X - 6 - f.FontBox.Location.X, 31);
+
+            // 线程数 / 间隔 行
+            f.ThreadLabel.Location = new Point(18, 223);
+            int thrLabRight = 18 + MeasureWidth(f.ThreadLabel, f.ThreadLabel.Text, 8);
+            f.ThreadNum.Location = new Point(thrLabRight + 4, 220);
+            f.ThreadNum.Size = new Size(70, 31);
+            int thrNumRight = f.ThreadNum.Location.X + f.ThreadNum.Size.Width;
+
+            bool showInterval = !string.IsNullOrEmpty(f.IntervalLabel.Text);
+            int intervalLabRight;
+            if (showInterval)
             {
-                // 韩中日:checkbox 是纯方框,文字写在右侧独立 Label
-                f.FromCheck.Text = "";
-                f.FromCheck.AutoSize = false;
-                f.FromCheck.Size = new Size(22, 21);
-                f.FromCheck.Location = new Point(25, 35);
-                f.FromNum.Location = new Point(53, 30);
-                f.FromLabel.Text = T("ui_from_ep");
-                f.FromLabel.Location = new Point(128, 33);
-                f.FromLabel.Visible = true;
-
-                f.ToCheck.Text = "";
-                f.ToCheck.AutoSize = false;
-                f.ToCheck.Size = new Size(22, 21);
-                f.ToCheck.Location = new Point(249, 35);
-                f.ToNum.Location = new Point(277, 30);
-                f.ToLabel.Text = T("ui_to_ep");
-                f.ToLabel.Location = new Point(352, 33);
-                f.ToLabel.Visible = true;
-
-                f.ThreadNum.Location = new Point(132, 220);
-                f.IntervalLabel.Location = new Point(268, 223);
                 f.IntervalLabel.Visible = true;
-                f.IntervalNum.Location = new Point(322, 220);
-                f.SecondLabel.Location = new Point(410, 223);
+                f.IntervalLabel.Location = new Point(thrNumRight + 16, 223);
+                intervalLabRight = f.IntervalLabel.Location.X + MeasureWidth(f.IntervalLabel, f.IntervalLabel.Text, 8);
             }
             else
             {
-                // 英越泰印:checkbox 自带文字,取消独立 Label
-                f.FromCheck.AutoSize = true;
-                f.FromCheck.Text = T("ui_from_ep");
-                f.FromCheck.Location = new Point(25, 31);
-                f.FromNum.Location = new Point(140, 30);
-                f.FromLabel.Visible = false;
-
-                f.ToCheck.AutoSize = true;
-                f.ToCheck.Text = T("ui_to_ep");
-                f.ToCheck.Location = new Point(249, 31);
-                f.ToNum.Location = new Point(343, 30);
-                f.ToLabel.Visible = false;
-
-                f.ThreadNum.Location = new Point(115, 220);
                 f.IntervalLabel.Visible = false;
-                f.IntervalNum.Location = new Point(255, 220);
-                f.SecondLabel.Location = new Point(343, 223);
+                intervalLabRight = thrNumRight + 16;
             }
+            f.IntervalNum.Location = new Point(intervalLabRight + 4, 220);
+            f.IntervalNum.Size = new Size(70, 31);
+            f.SecondLabel.Location = new Point(f.IntervalNum.Location.X + f.IntervalNum.Size.Width + 6, 223);
         }
     }
 }

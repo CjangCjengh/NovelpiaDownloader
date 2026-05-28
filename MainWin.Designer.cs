@@ -39,6 +39,7 @@
             this.PasswordLabel = new System.Windows.Forms.Label();
             this.EmailLabel = new System.Windows.Forms.Label();
             this.DownloadGroup = new System.Windows.Forms.GroupBox();
+            this.StopOnErrorCheck = new System.Windows.Forms.CheckBox();
             this.DownloadImageCheck = new System.Windows.Forms.CheckBox();
             this.CompressCheck = new System.Windows.Forms.CheckBox();
             this.RetryNum = new System.Windows.Forms.NumericUpDown();
@@ -80,6 +81,26 @@
             ((System.ComponentModel.ISupportInitialize)(this.IntervalNum)).BeginInit();
             this.SuspendLayout();
             // 
+            // LanguageBox
+            // 
+            this.LanguageBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.LanguageBox.FormattingEnabled = true;
+            this.LanguageBox.Items.AddRange(new object[] {
+            "한국어",
+            "English",
+            "简体中文",
+            "繁體中文",
+            "日本語",
+            "Tiếng Việt",
+            "ภาษาไทย",
+            "Bahasa Indonesia"});
+            this.LanguageBox.Location = new System.Drawing.Point(12, 12);
+            this.LanguageBox.Name = "LanguageBox";
+            this.LanguageBox.Size = new System.Drawing.Size(180, 33);
+            this.LanguageBox.TabIndex = 0;
+            this.LanguageBox.SelectedIndex = 0;
+            this.LanguageBox.SelectedIndexChanged += new System.EventHandler(this.LanguageBox_SelectedIndexChanged);
+            // 
             // LoginGroup
             // 
             this.LoginGroup.Controls.Add(this.LoginButton2);
@@ -90,10 +111,10 @@
             this.LoginGroup.Controls.Add(this.LoginkeyLabel);
             this.LoginGroup.Controls.Add(this.PasswordLabel);
             this.LoginGroup.Controls.Add(this.EmailLabel);
-            this.LoginGroup.Location = new System.Drawing.Point(12, 12);
+            this.LoginGroup.Location = new System.Drawing.Point(12, 51);
             this.LoginGroup.Name = "LoginGroup";
             this.LoginGroup.Size = new System.Drawing.Size(439, 159);
-            this.LoginGroup.TabIndex = 0;
+            this.LoginGroup.TabIndex = 1;
             this.LoginGroup.TabStop = false;
             this.LoginGroup.Text = "로그인";
             // 
@@ -119,29 +140,29 @@
             // 
             // LoginkeyText
             // 
-            this.LoginkeyText.Location = new System.Drawing.Point(103, 107);
+            this.LoginkeyText.Location = new System.Drawing.Point(110, 107);
             this.LoginkeyText.Name = "LoginkeyText";
-            this.LoginkeyText.Size = new System.Drawing.Size(244, 31);
+            this.LoginkeyText.Size = new System.Drawing.Size(237, 31);
             this.LoginkeyText.TabIndex = 5;
             // 
             // PasswordText
             // 
-            this.PasswordText.Location = new System.Drawing.Point(103, 67);
+            this.PasswordText.Location = new System.Drawing.Point(110, 67);
             this.PasswordText.Name = "PasswordText";
-            this.PasswordText.Size = new System.Drawing.Size(244, 31);
+            this.PasswordText.Size = new System.Drawing.Size(237, 31);
             this.PasswordText.TabIndex = 4;
             // 
             // EmailText
             // 
-            this.EmailText.Location = new System.Drawing.Point(103, 30);
+            this.EmailText.Location = new System.Drawing.Point(110, 30);
             this.EmailText.Name = "EmailText";
-            this.EmailText.Size = new System.Drawing.Size(244, 31);
+            this.EmailText.Size = new System.Drawing.Size(237, 31);
             this.EmailText.TabIndex = 3;
             // 
             // LoginkeyLabel
             // 
             this.LoginkeyLabel.AutoSize = true;
-            this.LoginkeyLabel.Location = new System.Drawing.Point(6, 110);
+            this.LoginkeyLabel.Location = new System.Drawing.Point(12, 110);
             this.LoginkeyLabel.Name = "LoginkeyLabel";
             this.LoginkeyLabel.Size = new System.Drawing.Size(97, 25);
             this.LoginkeyLabel.TabIndex = 2;
@@ -159,7 +180,7 @@
             // EmailLabel
             // 
             this.EmailLabel.AutoSize = true;
-            this.EmailLabel.Location = new System.Drawing.Point(21, 33);
+            this.EmailLabel.Location = new System.Drawing.Point(12, 33);
             this.EmailLabel.Name = "EmailLabel";
             this.EmailLabel.Size = new System.Drawing.Size(66, 25);
             this.EmailLabel.TabIndex = 0;
@@ -167,6 +188,7 @@
             // 
             // DownloadGroup
             // 
+            this.DownloadGroup.Controls.Add(this.StopOnErrorCheck);
             this.DownloadGroup.Controls.Add(this.DownloadImageCheck);
             this.DownloadGroup.Controls.Add(this.CompressCheck);
             this.DownloadGroup.Controls.Add(this.RetryNum);
@@ -189,19 +211,29 @@
             this.DownloadGroup.Controls.Add(this.NovelNoText);
             this.DownloadGroup.Controls.Add(this.ExtensionLabel);
             this.DownloadGroup.Controls.Add(this.NovelNoLable);
-            this.DownloadGroup.Location = new System.Drawing.Point(13, 251);
+            this.DownloadGroup.Location = new System.Drawing.Point(12, 222);
             this.DownloadGroup.Name = "DownloadGroup";
-            this.DownloadGroup.Size = new System.Drawing.Size(439, 290);
-            this.DownloadGroup.TabIndex = 1;
+            this.DownloadGroup.Size = new System.Drawing.Size(439, 318);
+            this.DownloadGroup.TabIndex = 2;
             this.DownloadGroup.TabStop = false;
             this.DownloadGroup.Text = "다운로드";
+            // 
+            // StopOnErrorCheck
+            // 
+            this.StopOnErrorCheck.AutoSize = true;
+            this.StopOnErrorCheck.Location = new System.Drawing.Point(220, 126);
+            this.StopOnErrorCheck.Name = "StopOnErrorCheck";
+            this.StopOnErrorCheck.Size = new System.Drawing.Size(150, 29);
+            this.StopOnErrorCheck.TabIndex = 30;
+            this.StopOnErrorCheck.Text = "오류 시 중단";
+            this.StopOnErrorCheck.UseVisualStyleBackColor = true;
             // 
             // DownloadImageCheck
             // 
             this.DownloadImageCheck.AutoSize = true;
             this.DownloadImageCheck.Checked = true;
             this.DownloadImageCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.DownloadImageCheck.Location = new System.Drawing.Point(150, 252);
+            this.DownloadImageCheck.Location = new System.Drawing.Point(15, 126);
             this.DownloadImageCheck.Name = "DownloadImageCheck";
             this.DownloadImageCheck.Size = new System.Drawing.Size(170, 29);
             this.DownloadImageCheck.TabIndex = 27;
@@ -213,7 +245,7 @@
             this.CompressCheck.AutoSize = true;
             this.CompressCheck.Checked = true;
             this.CompressCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.CompressCheck.Location = new System.Drawing.Point(10, 252);
+            this.CompressCheck.Location = new System.Drawing.Point(220, 97);
             this.CompressCheck.Name = "CompressCheck";
             this.CompressCheck.Size = new System.Drawing.Size(123, 29);
             this.CompressCheck.TabIndex = 26;
@@ -222,14 +254,14 @@
             // 
             // RetryNum
             // 
-            this.RetryNum.Location = new System.Drawing.Point(360, 215);
+            this.RetryNum.Location = new System.Drawing.Point(95, 155);
             this.RetryNum.Maximum = new decimal(new int[] {
             10,
             0,
             0,
             0});
             this.RetryNum.Name = "RetryNum";
-            this.RetryNum.Size = new System.Drawing.Size(67, 31);
+            this.RetryNum.Size = new System.Drawing.Size(70, 31);
             this.RetryNum.TabIndex = 25;
             this.RetryNum.Value = new decimal(new int[] {
             3,
@@ -240,7 +272,7 @@
             // RetryLabel
             // 
             this.RetryLabel.AutoSize = true;
-            this.RetryLabel.Location = new System.Drawing.Point(285, 218);
+            this.RetryLabel.Location = new System.Drawing.Point(15, 158);
             this.RetryLabel.Name = "RetryLabel";
             this.RetryLabel.Size = new System.Drawing.Size(66, 25);
             this.RetryLabel.TabIndex = 24;
@@ -249,7 +281,9 @@
             // KeepHtmlCheck
             // 
             this.KeepHtmlCheck.AutoSize = true;
-            this.KeepHtmlCheck.Location = new System.Drawing.Point(135, 215);
+            this.KeepHtmlCheck.Checked = true;
+            this.KeepHtmlCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.KeepHtmlCheck.Location = new System.Drawing.Point(15, 97);
             this.KeepHtmlCheck.Name = "KeepHtmlCheck";
             this.KeepHtmlCheck.Size = new System.Drawing.Size(129, 29);
             this.KeepHtmlCheck.TabIndex = 23;
@@ -259,9 +293,7 @@
             // RemoveBlankCheck
             // 
             this.RemoveBlankCheck.AutoSize = true;
-            this.RemoveBlankCheck.Checked = true;
-            this.RemoveBlankCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.RemoveBlankCheck.Location = new System.Drawing.Point(10, 215);
+            this.RemoveBlankCheck.Location = new System.Drawing.Point(220, 68);
             this.RemoveBlankCheck.Name = "RemoveBlankCheck";
             this.RemoveBlankCheck.Size = new System.Drawing.Size(122, 29);
             this.RemoveBlankCheck.TabIndex = 22;
@@ -270,9 +302,9 @@
             // 
             // OutputDirButton
             // 
-            this.OutputDirButton.Location = new System.Drawing.Point(352, 172);
+            this.OutputDirButton.Location = new System.Drawing.Point(353, 188);
             this.OutputDirButton.Name = "OutputDirButton";
-            this.OutputDirButton.Size = new System.Drawing.Size(75, 36);
+            this.OutputDirButton.Size = new System.Drawing.Size(75, 32);
             this.OutputDirButton.TabIndex = 21;
             this.OutputDirButton.Text = "찾아보기";
             this.OutputDirButton.UseVisualStyleBackColor = true;
@@ -280,15 +312,15 @@
             // 
             // OutputDirText
             // 
-            this.OutputDirText.Location = new System.Drawing.Point(102, 175);
+            this.OutputDirText.Location = new System.Drawing.Point(110, 190);
             this.OutputDirText.Name = "OutputDirText";
-            this.OutputDirText.Size = new System.Drawing.Size(244, 31);
+            this.OutputDirText.Size = new System.Drawing.Size(237, 31);
             this.OutputDirText.TabIndex = 20;
             // 
             // OutputDirLabel
             // 
             this.OutputDirLabel.AutoSize = true;
-            this.OutputDirLabel.Location = new System.Drawing.Point(11, 178);
+            this.OutputDirLabel.Location = new System.Drawing.Point(15, 193);
             this.OutputDirLabel.Name = "OutputDirLabel";
             this.OutputDirLabel.Size = new System.Drawing.Size(90, 25);
             this.OutputDirLabel.TabIndex = 19;
@@ -297,7 +329,7 @@
             // NoticeCheck
             // 
             this.NoticeCheck.AutoSize = true;
-            this.NoticeCheck.Location = new System.Drawing.Point(25, 144);
+            this.NoticeCheck.Location = new System.Drawing.Point(15, 68);
             this.NoticeCheck.Name = "NoticeCheck";
             this.NoticeCheck.Size = new System.Drawing.Size(116, 29);
             this.NoticeCheck.TabIndex = 18;
@@ -312,12 +344,13 @@
             this.ToLabel.Name = "ToLabel";
             this.ToLabel.Size = new System.Drawing.Size(66, 25);
             this.ToLabel.TabIndex = 16;
-            this.ToLabel.Text = "장까지";
+            this.ToLabel.Text = "화까지";
+            this.ToLabel.Visible = false;
             // 
             // ToNum
             // 
             this.ToNum.Enabled = false;
-            this.ToNum.Location = new System.Drawing.Point(277, 30);
+            this.ToNum.Location = new System.Drawing.Point(355, 30);
             this.ToNum.Maximum = new decimal(new int[] {
             100000,
             0,
@@ -329,7 +362,7 @@
             0,
             0});
             this.ToNum.Name = "ToNum";
-            this.ToNum.Size = new System.Drawing.Size(69, 31);
+            this.ToNum.Size = new System.Drawing.Size(70, 31);
             this.ToNum.TabIndex = 15;
             this.ToNum.Value = new decimal(new int[] {
             1,
@@ -340,10 +373,11 @@
             // ToCheck
             // 
             this.ToCheck.AutoSize = true;
-            this.ToCheck.Location = new System.Drawing.Point(249, 35);
+            this.ToCheck.Location = new System.Drawing.Point(220, 33);
             this.ToCheck.Name = "ToCheck";
-            this.ToCheck.Size = new System.Drawing.Size(22, 21);
+            this.ToCheck.Size = new System.Drawing.Size(105, 29);
             this.ToCheck.TabIndex = 14;
+            this.ToCheck.Text = "화까지";
             this.ToCheck.UseVisualStyleBackColor = true;
             this.ToCheck.CheckedChanged += new System.EventHandler(this.ToCheck_CheckedChanged);
             // 
@@ -355,12 +389,13 @@
             this.FromLabel.Name = "FromLabel";
             this.FromLabel.Size = new System.Drawing.Size(66, 25);
             this.FromLabel.TabIndex = 13;
-            this.FromLabel.Text = "장부터";
+            this.FromLabel.Text = "화부터";
+            this.FromLabel.Visible = false;
             // 
             // FromNum
             // 
             this.FromNum.Enabled = false;
-            this.FromNum.Location = new System.Drawing.Point(53, 30);
+            this.FromNum.Location = new System.Drawing.Point(150, 30);
             this.FromNum.Maximum = new decimal(new int[] {
             100000,
             0,
@@ -372,7 +407,7 @@
             0,
             0});
             this.FromNum.Name = "FromNum";
-            this.FromNum.Size = new System.Drawing.Size(69, 31);
+            this.FromNum.Size = new System.Drawing.Size(70, 31);
             this.FromNum.TabIndex = 12;
             this.FromNum.Value = new decimal(new int[] {
             1,
@@ -383,27 +418,28 @@
             // FromCheck
             // 
             this.FromCheck.AutoSize = true;
-            this.FromCheck.Location = new System.Drawing.Point(25, 35);
+            this.FromCheck.Location = new System.Drawing.Point(15, 33);
             this.FromCheck.Name = "FromCheck";
-            this.FromCheck.Size = new System.Drawing.Size(22, 21);
+            this.FromCheck.Size = new System.Drawing.Size(105, 29);
             this.FromCheck.TabIndex = 11;
+            this.FromCheck.Text = "화부터";
             this.FromCheck.UseVisualStyleBackColor = true;
             this.FromCheck.CheckedChanged += new System.EventHandler(this.FromCheck_CheckedChanged);
             // 
             // DownloadButton
             // 
-            this.DownloadButton.Location = new System.Drawing.Point(352, 67);
+            this.DownloadButton.Location = new System.Drawing.Point(347, 268);
             this.DownloadButton.Name = "DownloadButton";
-            this.DownloadButton.Size = new System.Drawing.Size(75, 66);
+            this.DownloadButton.Size = new System.Drawing.Size(80, 36);
             this.DownloadButton.TabIndex = 10;
-            this.DownloadButton.Text = "다운\r\n로드";
+            this.DownloadButton.Text = "다운로드";
             this.DownloadButton.UseVisualStyleBackColor = true;
             this.DownloadButton.Click += new System.EventHandler(this.DownloadButton_Click);
             // 
             // TxtButton
             // 
             this.TxtButton.AutoSize = true;
-            this.TxtButton.Location = new System.Drawing.Point(249, 104);
+            this.TxtButton.Location = new System.Drawing.Point(180, 270);
             this.TxtButton.Name = "TxtButton";
             this.TxtButton.Size = new System.Drawing.Size(68, 29);
             this.TxtButton.TabIndex = 8;
@@ -414,7 +450,7 @@
             // 
             this.EpubButton.AutoSize = true;
             this.EpubButton.Checked = true;
-            this.EpubButton.Location = new System.Drawing.Point(120, 104);
+            this.EpubButton.Location = new System.Drawing.Point(85, 270);
             this.EpubButton.Name = "EpubButton";
             this.EpubButton.Size = new System.Drawing.Size(80, 29);
             this.EpubButton.TabIndex = 7;
@@ -424,15 +460,15 @@
             // 
             // NovelNoText
             // 
-            this.NovelNoText.Location = new System.Drawing.Point(102, 67);
+            this.NovelNoText.Location = new System.Drawing.Point(110, 232);
             this.NovelNoText.Name = "NovelNoText";
-            this.NovelNoText.Size = new System.Drawing.Size(244, 31);
+            this.NovelNoText.Size = new System.Drawing.Size(317, 31);
             this.NovelNoText.TabIndex = 6;
             // 
             // ExtensionLabel
             // 
             this.ExtensionLabel.AutoSize = true;
-            this.ExtensionLabel.Location = new System.Drawing.Point(20, 106);
+            this.ExtensionLabel.Location = new System.Drawing.Point(15, 273);
             this.ExtensionLabel.Name = "ExtensionLabel";
             this.ExtensionLabel.Size = new System.Drawing.Size(48, 25);
             this.ExtensionLabel.TabIndex = 1;
@@ -441,7 +477,7 @@
             // NovelNoLable
             // 
             this.NovelNoLable.AutoSize = true;
-            this.NovelNoLable.Location = new System.Drawing.Point(11, 70);
+            this.NovelNoLable.Location = new System.Drawing.Point(15, 235);
             this.NovelNoLable.Name = "NovelNoLable";
             this.NovelNoLable.Size = new System.Drawing.Size(90, 25);
             this.NovelNoLable.TabIndex = 0;
@@ -449,37 +485,37 @@
             // 
             // ConsoleBox
             // 
-            this.ConsoleBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.ConsoleBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ConsoleBox.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.ConsoleBox.Location = new System.Drawing.Point(458, 23);
+            this.ConsoleBox.Location = new System.Drawing.Point(458, 51);
             this.ConsoleBox.Multiline = true;
             this.ConsoleBox.Name = "ConsoleBox";
             this.ConsoleBox.ReadOnly = true;
             this.ConsoleBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ConsoleBox.Size = new System.Drawing.Size(420, 518);
+            this.ConsoleBox.Size = new System.Drawing.Size(420, 489);
             this.ConsoleBox.TabIndex = 5;
             // 
             // ThreadLabel
             // 
             this.ThreadLabel.AutoSize = true;
-            this.ThreadLabel.Location = new System.Drawing.Point(18, 223);
+            this.ThreadLabel.Location = new System.Drawing.Point(18, 555);
             this.ThreadLabel.Name = "ThreadLabel";
             this.ThreadLabel.Size = new System.Drawing.Size(90, 25);
             this.ThreadLabel.TabIndex = 11;
-            this.ThreadLabel.Text = "스레드 수";
+            this.ThreadLabel.Text = "스레드";
             // 
             // ThreadNum
             // 
-            this.ThreadNum.Location = new System.Drawing.Point(132, 220);
+            this.ThreadNum.Location = new System.Drawing.Point(132, 552);
             this.ThreadNum.Minimum = new decimal(new int[] {
             1,
             0,
             0,
             0});
             this.ThreadNum.Name = "ThreadNum";
-            this.ThreadNum.Size = new System.Drawing.Size(82, 31);
+            this.ThreadNum.Size = new System.Drawing.Size(70, 31);
             this.ThreadNum.TabIndex = 12;
             this.ThreadNum.Value = new decimal(new int[] {
             1,
@@ -490,7 +526,7 @@
             // IntervalLabel
             // 
             this.IntervalLabel.AutoSize = true;
-            this.IntervalLabel.Location = new System.Drawing.Point(268, 223);
+            this.IntervalLabel.Location = new System.Drawing.Point(218, 555);
             this.IntervalLabel.Name = "IntervalLabel";
             this.IntervalLabel.Size = new System.Drawing.Size(48, 25);
             this.IntervalLabel.TabIndex = 13;
@@ -499,7 +535,7 @@
             // SecondLabel
             // 
             this.SecondLabel.AutoSize = true;
-            this.SecondLabel.Location = new System.Drawing.Point(410, 223);
+            this.SecondLabel.Location = new System.Drawing.Point(360, 555);
             this.SecondLabel.Name = "SecondLabel";
             this.SecondLabel.Size = new System.Drawing.Size(30, 25);
             this.SecondLabel.TabIndex = 14;
@@ -513,20 +549,20 @@
             0,
             0,
             65536});
-            this.IntervalNum.Location = new System.Drawing.Point(322, 220);
+            this.IntervalNum.Location = new System.Drawing.Point(280, 552);
             this.IntervalNum.Maximum = new decimal(new int[] {
             5,
             0,
             0,
             0});
             this.IntervalNum.Name = "IntervalNum";
-            this.IntervalNum.Size = new System.Drawing.Size(82, 31);
+            this.IntervalNum.Size = new System.Drawing.Size(70, 31);
             this.IntervalNum.TabIndex = 15;
             // 
             // FontLabel
             // 
             this.FontLabel.AutoSize = true;
-            this.FontLabel.Location = new System.Drawing.Point(19, 183);
+            this.FontLabel.Location = new System.Drawing.Point(19, 595);
             this.FontLabel.Name = "FontLabel";
             this.FontLabel.Size = new System.Drawing.Size(90, 25);
             this.FontLabel.TabIndex = 16;
@@ -534,7 +570,7 @@
             // 
             // FontButton
             // 
-            this.FontButton.Location = new System.Drawing.Point(365, 177);
+            this.FontButton.Location = new System.Drawing.Point(376, 589);
             this.FontButton.Name = "FontButton";
             this.FontButton.Size = new System.Drawing.Size(75, 36);
             this.FontButton.TabIndex = 9;
@@ -544,37 +580,17 @@
             // 
             // FontBox
             // 
-            this.FontBox.Location = new System.Drawing.Point(115, 180);
+            this.FontBox.Location = new System.Drawing.Point(115, 592);
             this.FontBox.Name = "FontBox";
-            this.FontBox.Size = new System.Drawing.Size(244, 31);
+            this.FontBox.Size = new System.Drawing.Size(255, 31);
             this.FontBox.TabIndex = 8;
             this.FontBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.FontBox_KeyPress);
-            // 
-            // LanguageBox
-            // 
-            this.LanguageBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.LanguageBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.LanguageBox.FormattingEnabled = true;
-            this.LanguageBox.Items.AddRange(new object[] {
-            "한국어",
-            "English",
-            "简体中文",
-            "繁體中文",
-            "日本語",
-            "Tiếng Việt",
-            "ภาษาไทย",
-            "Bahasa Indonesia"});
-            this.LanguageBox.Location = new System.Drawing.Point(728, 568);
-            this.LanguageBox.Name = "LanguageBox";
-            this.LanguageBox.Size = new System.Drawing.Size(150, 33);
-            this.LanguageBox.TabIndex = 17;
-            this.LanguageBox.SelectedIndexChanged += new System.EventHandler(this.LanguageBox_SelectedIndexChanged);
             // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(890, 608);
+            this.ClientSize = new System.Drawing.Size(890, 640);
             this.Controls.Add(this.LanguageBox);
             this.Controls.Add(this.FontButton);
             this.Controls.Add(this.FontLabel);
@@ -590,7 +606,7 @@
             this.Font = new System.Drawing.Font("Malgun Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.MinimumSize = new System.Drawing.Size(906, 655);
+            this.MinimumSize = new System.Drawing.Size(906, 690);
             this.Name = "MainWin";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "NovelpiaDownloader";
@@ -653,5 +669,6 @@
         internal System.Windows.Forms.NumericUpDown RetryNum;
         internal System.Windows.Forms.CheckBox CompressCheck;
         internal System.Windows.Forms.CheckBox DownloadImageCheck;
+        internal System.Windows.Forms.CheckBox StopOnErrorCheck;
     }
 }
