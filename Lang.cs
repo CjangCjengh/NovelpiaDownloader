@@ -36,7 +36,7 @@ namespace NovelpiaDownloader
                 { En, "Login failed.\r\n" },
                 { ZhCn, "登录失败。\r\n" },
                 { ZhTw, "登入失敗。\r\n" },
-                { Ja, "ログインに失敗しました。\r\n" },
+                { Ja, "로그인에 실패했습니다。\r\n" },
                 { Vi, "Đăng nhập thất bại.\r\n" },
                 { Th, "เข้าสู่ระบบไม่สำเร็จ\r\n" },
                 { Id, "Login gagal.\r\n" } } },
@@ -239,7 +239,6 @@ namespace NovelpiaDownloader
                 { Th, "หยุดเพราะข้อผิดพลาด กำลังประกอบจากที่ดาวน์โหลดแล้ว\r\n" },
                 { Id, "Berhenti karena error, mengemas progres saat ini\r\n" } } },
 
-            // 控件文本(供 Apply 使用)
             { "ui_login_group", new Dictionary<string, string> {
                 { Ko, "로그인" }, { En, "Login" }, { ZhCn, "登录" }, { ZhTw, "登入" },
                 { Ja, "ログイン" }, { Vi, "Đăng nhập" }, { Th, "เข้าสู่ระบบ" }, { Id, "Login" } } },
@@ -309,7 +308,6 @@ namespace NovelpiaDownloader
         {
             if (texts.TryGetValue(key, out var d) && d.TryGetValue(Current, out var s))
                 return s;
-            // 缺失时回退到英文 / 韩文
             if (texts.TryGetValue(key, out d))
             {
                 if (d.TryGetValue(En, out s)) return s;
@@ -323,7 +321,6 @@ namespace NovelpiaDownloader
             return string.Format(T(key), args);
         }
 
-        // 各语言对应的窗体字体
         static string FontFor(string lang)
         {
             switch (lang)
@@ -337,7 +334,6 @@ namespace NovelpiaDownloader
             }
         }
 
-        // 测量文本实际像素宽度,使按钮宽度自适应
         static int MeasureWidth(Control c, string text, int padding)
         {
             if (string.IsNullOrEmpty(text)) return padding;
@@ -347,19 +343,16 @@ namespace NovelpiaDownloader
 
         public static void Apply(MainWin f, string lang)
         {
-            // 校验语言代码
             bool known = false;
             foreach (var c in Codes) if (c == lang) { known = true; break; }
             Current = known ? lang : Ko;
 
-            // 切换字体(整个窗体 + 控制台共用同一字体)
             string uiFontName = FontFor(Current);
             float uiSize = f.Font.Size;
             var newFont = new Font(uiFontName, uiSize, FontStyle.Regular, GraphicsUnit.Point);
             f.Font = newFont;
             f.ConsoleBox.Font = newFont;
 
-            // 文案
             f.LoginGroup.Text = T("ui_login_group");
             f.LoginButton1.Text = T("ui_login_btn");
             f.LoginButton2.Text = T("ui_login_btn");
@@ -390,30 +383,26 @@ namespace NovelpiaDownloader
             f.SecondLabel.Text = T("ui_second");
 
             Relayout(f);
-            // 切语言时强制把窗体高度调为当前语言需要的最小高度,以免之前语言额外拉大后里面留下大段空白
             f.Height = RequiredHeight(f);
         }
 
         public static void Relayout(MainWin f)
         {
-
-            // ===== 横向布局: 左侧 LoginGroup/DownloadGroup 与右侧 ConsoleBox 各占一半 =====
             const int outerPad = 12;
             const int gap = 12;
             int totalW = f.ClientSize.Width;
-            int leftHalf = (totalW - outerPad * 2 - gap) / 2;
 
-            // 计算线程/间隔/重试 一行的最小需求宽度,作为左半部分下限
             int thrLabW = MeasureWidth(f.ThreadLabel, f.ThreadLabel.Text, 8);
             int intLabW = MeasureWidth(f.IntervalLabel, f.IntervalLabel.Text, 8);
             int retLabW = MeasureWidth(f.RetryLabel, f.RetryLabel.Text, 8);
-            // 18(左边) + thrLab + 4 + 70 + 16 + intLab + 4 + 70 + 16 + retLab + 4 + 70 + 18(右边)
             int threadRowMinW = 18 + thrLabW + 4 + 70 + 16 + intLabW + 4 + 70 + 16 + retLabW + 4 + 70 + 18;
+
+            int leftHalf = (totalW - outerPad * 2 - gap) / 2;
             if (leftHalf < threadRowMinW) leftHalf = threadRowMinW;
             if (leftHalf < 360) leftHalf = 360;
             int rightX = outerPad + leftHalf + gap;
-            int rightW = totalW - rightX - outerPad;
-            if (rightW < 200) rightW = 200;
+            int rightW = leftHalf;
+            int requiredW = rightX + rightW + outerPad;
 
             f.LoginGroup.Location = new Point(outerPad, f.LoginGroup.Location.Y);
             f.LoginGroup.Size = new Size(leftHalf, f.LoginGroup.Size.Height);
@@ -424,19 +413,9 @@ namespace NovelpiaDownloader
             f.ConsoleBox.Location = new Point(rightX, f.ConsoleBox.Location.Y);
             f.ConsoleBox.Size = new Size(rightW, f.ConsoleBox.Size.Height);
 
-            // 第二列 X = DownloadGroup 内宽度的一半(让两列勾选框分得开)
             int dlInnerW = f.DownloadGroup.ClientSize.Width;
             int col2X = dlInnerW / 2;
 
-            // ===== 布局 =====
-            // DownloadGroup 内自上而下:
-            // (1) 章节范围: y=30
-            // (2) 公告/去空行/保留HTML/EPUB压缩/下载图片/出错中止/重试 — 4 行勾选块: y=68/97/126/155
-            // (3) 保存路径(与浏览按钮): y=190
-            // (4) 小说编号: y=232
-            // (5) 格式 + 下载按钮: y=270
-
-            // 章节范围: 统一布局(KeepCheck 自带文字,无独立 Label)
             f.FromCheck.AutoSize = true;
             f.FromCheck.Text = T("ui_from_ep");
             f.FromCheck.Location = new Point(15, 33);
@@ -453,7 +432,6 @@ namespace NovelpiaDownloader
             f.ToNum.Size = new Size(70, 31);
             f.ToLabel.Visible = false;
 
-            // 勾选框块: 2 列 × 4 行, 行距 29
             f.NoticeCheck.AutoSize = true;
             f.RemoveBlankCheck.AutoSize = true;
             f.KeepHtmlCheck.AutoSize = true;
@@ -468,7 +446,6 @@ namespace NovelpiaDownloader
             f.DownloadImageCheck.Location = new Point(15, 126);
             f.StopOnErrorCheck.Location = new Point(col2X, 126);
 
-            // 保存路径行: y=156
             f.OutputDirLabel.Location = new Point(15, 159);
             int saveLabelRight = f.OutputDirLabel.Location.X + MeasureWidth(f.OutputDirLabel, f.OutputDirLabel.Text, 8);
             int browseBtnW = MeasureWidth(f.OutputDirButton, f.OutputDirButton.Text, 26);
@@ -479,7 +456,6 @@ namespace NovelpiaDownloader
             f.OutputDirText.Location = new Point(saveLabelRight + 4, 156);
             f.OutputDirText.Size = new Size(f.OutputDirButton.Location.X - 6 - f.OutputDirText.Location.X, 31);
 
-            // 小说编号: y=198
             f.NovelNoLable.Location = new Point(15, 198);
             int novelLabelRight = f.NovelNoLable.Location.X + MeasureWidth(f.NovelNoLable, f.NovelNoLable.Text, 8);
             f.NovelNoText.Location = new Point(novelLabelRight + 4, 195);
@@ -496,10 +472,8 @@ namespace NovelpiaDownloader
             f.DownloadButton.Size = new Size(dlBtnW, 36);
             f.DownloadButton.Location = new Point(outputRightEdge - dlBtnW, 230);
 
-            // 下载组内部所需高度(最后一行 格式/下载按钮 底边 + 边距);实际 Size 在下方与可用高度取 max 后再设
             int dlGroupBottomInner = f.DownloadButton.Location.Y + f.DownloadButton.Size.Height + 18;
 
-            // LoginGroup 内: Email/Password 标签宽度根据文本测量
             int emailLabW = MeasureWidth(f.EmailLabel, f.EmailLabel.Text, 0);
             int pwdLabW = MeasureWidth(f.PasswordLabel, f.PasswordLabel.Text, 0);
             int keyLabW = MeasureWidth(f.LoginkeyLabel, f.LoginkeyLabel.Text, 0);
@@ -524,7 +498,6 @@ namespace NovelpiaDownloader
             f.LoginkeyText.Location = new Point(loginInputX, 107);
             f.LoginkeyText.Size = new Size(loginInputW, 31);
 
-            // FontLabel/FontBox/FontButton 自适应 (位于 LoginGroup 下方, 线程行上方)
             int fontRowY = f.LoginGroup.Location.Y + f.LoginGroup.Size.Height + 9;
             int fontLabRight = 19 + MeasureWidth(f.FontLabel, f.FontLabel.Text, 8);
             int fontBtnW = MeasureWidth(f.FontButton, f.FontButton.Text, 26);
@@ -539,12 +512,10 @@ namespace NovelpiaDownloader
             f.FontBox.Enabled = false;
             f.FontButton.Enabled = false;
 
-            // 线程/间隔/重试 一行 (位于 FontLabel 下方, DownloadGroup 上方)
-            // 拉伸时 间隔 获得 1/6 平移, 重试 获得 1/3 平移 (以 threadRowMinW 为基线)
             int extraW = leftHalf - threadRowMinW;
             if (extraW < 0) extraW = 0;
-            int shift1 = extraW / 6;     // 间隔平移量
-            int shift2 = extraW / 3;     // 重试平移量 (在间隔已平移 1/6 的基础上, 再多平移 1/6)
+            int shift1 = extraW / 6;
+            int shift2 = extraW / 3;
 
             int threadRowY = fontRowY + f.FontButton.Size.Height + 6;
             f.ThreadLabel.Location = new Point(18, threadRowY + 3);
@@ -560,38 +531,29 @@ namespace NovelpiaDownloader
             f.IntervalNum.Size = new Size(70, 31);
             int intervalNumRight = f.IntervalNum.Location.X + f.IntervalNum.Size.Width;
 
-            // SecondLabel 隐藏(单位已合入 IntervalLabel)
             f.SecondLabel.Visible = false;
 
-            // 重试总平移 shift2; 已从 intervalNumRight 继承 shift1, 还需额外 +shift2-shift1 才达到 shift2
             f.RetryLabel.Location = new Point(intervalNumRight + 16 + (shift2 - shift1), threadRowY + 3);
             int retryLabRight = f.RetryLabel.Location.X + MeasureWidth(f.RetryLabel, f.RetryLabel.Text, 8);
             f.RetryNum.Location = new Point(retryLabRight + 4, threadRowY);
             f.RetryNum.Size = new Size(70, 31);
 
-            // DownloadGroup 位于线程行下方, 底边随窗口拉伸
             int dlGroupY = threadRowY + 31 + 12;
             f.DownloadGroup.Location = new Point(f.DownloadGroup.Location.X, dlGroupY);
-            // 下载组高度 = max(内部需要高度, 可用高度)
             int dlGroupAvailableH = f.ClientSize.Height - dlGroupY - 12;
             int dlGroupH = dlGroupBottomInner > dlGroupAvailableH ? dlGroupBottomInner : dlGroupAvailableH;
             f.DownloadGroup.Size = new Size(f.DownloadGroup.Size.Width, dlGroupH);
 
-            // 让 ConsoleBox 顶边与 LanguageBox 同高, 底边与 DownloadGroup 底边对齐
             int consoleBottom = f.DownloadGroup.Location.Y + f.DownloadGroup.Size.Height;
             f.ConsoleBox.Size = new Size(f.ConsoleBox.Size.Width, consoleBottom - f.ConsoleBox.Location.Y);
 
-            // 窗体高度限制(仅调整 MinimumSize, Height 交由 Apply 主动控制)
-            // 最小高度 = 下载组内部需要高度 + 边距
             int desiredClientH = dlGroupY + dlGroupBottomInner + 12;
             int formExtraH = f.Height - f.ClientSize.Height;
             int desiredH = desiredClientH + formExtraH;
-            // 同时保证最小宽度 = 左半需求 + 右侧最小 + 边距
-            int desiredMinW = outerPad + threadRowMinW + gap + 200 + outerPad + (f.Width - f.ClientSize.Width);
+            int desiredMinW = requiredW + (f.Width - f.ClientSize.Width);
             f.MinimumSize = new Size(desiredMinW, desiredH);
         }
 
-        // 计算当前语言下控件需要的最小窗体高度(供 Apply 在切语言后调用)
         public static int RequiredHeight(MainWin f)
         {
             return f.MinimumSize.Height;

@@ -7,14 +7,14 @@ using System.Text;
 namespace NovelpiaDownloader
 {
     /// <summary>
-    /// 面向 EPUB 的 ZIP 写入器。
-    /// 规则：
-    ///   - "mimetype" 条目必须是第一条、无扩展字段、STORED(method=0)（EPUB OCF 规范要求）。
-    ///   - 其他条目按 <see cref="EnableCompression"/> 选择 Deflate 或 STORED。
+    /// EPUB-oriented ZIP writer.
+    /// Rules:
+    ///   - The "mimetype" entry must be the first one, with no extra field, STORED (method=0) per EPUB OCF spec.
+    ///   - Other entries use Deflate or STORED depending on <see cref="EnableCompression"/>.
     ///
-    /// 该类是自包含的（不依赖 System.IO.Compression.ZipArchive 的条目元数据），
-    /// 因此即便选 "NoCompression" 也能产生 method=0 的 Stored 条目，
-    /// 不会出现 ZipArchive 那种 "CompressionLevel=NoCompression 但文件头仍写 method=8" 的行为。
+    /// This class is self-contained (does not rely on System.IO.Compression.ZipArchive entry metadata),
+    /// so it always produces method=0 stored entries when not compressing,
+    /// avoiding ZipArchive's quirk of writing method=8 in the local header even with CompressionLevel.NoCompression.
     /// </summary>
     internal sealed class EpubZipWriter : IDisposable
     {
@@ -25,7 +25,7 @@ namespace NovelpiaDownloader
         private bool _finished;
         private bool _disposed;
 
-        /// <summary>除 mimetype 外，其他条目是否启用 Deflate 压缩。</summary>
+        /// <summary>Whether non-mimetype entries use Deflate compression.</summary>
         public bool EnableCompression { get; }
 
         private struct CdRecord
