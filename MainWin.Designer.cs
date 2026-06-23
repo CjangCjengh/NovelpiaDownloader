@@ -365,7 +365,7 @@
             0,
             0});
             this.ToNum.Minimum = new decimal(new int[] {
-            1,
+            0,
             0,
             0,
             0});
@@ -410,7 +410,7 @@
             0,
             0});
             this.FromNum.Minimum = new decimal(new int[] {
-            1,
+            0,
             0,
             0,
             0});
@@ -418,7 +418,7 @@
             this.FromNum.Size = new System.Drawing.Size(70, 31);
             this.FromNum.TabIndex = 12;
             this.FromNum.Value = new decimal(new int[] {
-            1,
+            0,
             0,
             0,
             0});

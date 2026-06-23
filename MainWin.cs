@@ -168,7 +168,7 @@ namespace NovelpiaDownloader
                     title = $"{job.novelNo}_{title}";
                 if (job.includeChapterRangeInName && (job.fromChecked || job.toChecked))
                 {
-                    int fromN = job.fromChecked ? job.fromN : 1;
+                    int fromN = job.fromChecked ? job.fromN : 0;
                     string toN = job.toChecked ? job.toN.ToString() : "end";
                     title = $"{title}_{fromN}-{toN}";
                 }
@@ -239,7 +239,7 @@ namespace NovelpiaDownloader
             string range;
             if (job.fromChecked || job.toChecked)
             {
-                string a = job.fromChecked ? job.fromN.ToString() : "1";
+                string a = job.fromChecked ? job.fromN.ToString() : "0";
                 string b = job.toChecked ? job.toN.ToString() : "end";
                 range = $"  ({a}-{b})";
             }
@@ -343,7 +343,7 @@ namespace NovelpiaDownloader
             Directory.CreateDirectory(directory);
             int thread_num = job.threadNum;
             float interval = job.interval;
-            int from = job.fromChecked ? job.fromN : 1;
+            int from = job.fromChecked ? job.fromN : 0;
             int to = job.toChecked ? job.toN : int.MaxValue;
             _stopOnError = job.stopOnError;
             _retryCount = retry;
