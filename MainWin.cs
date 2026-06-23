@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -366,6 +368,8 @@ namespace NovelpiaDownloader
                     int page = 0;
                     var seenChapterIds = new HashSet<string>();
                     var chapterNames = new List<(string, string)>();
+                    var chapterHtmls = new ConcurrentDictionary<string, string>();
+                    var images = new ImageContext();
                     List<Thread> threads = new List<Thread>();
                     if (includeNotice && novelPageHtml != null)
                     {
@@ -382,8 +386,18 @@ namespace NovelpiaDownloader
                                 string capturedName = chapterName;
                                 string capturedId = chapterId;
                                 string capturedPath = jsonPath;
-                                threads.Add(new Thread(() => DownloadChapter(capturedId, capturedName, capturedPath, true, 0)));
-                                chapterNames.Add((HttpUtility.HtmlEncode($"[{Lang.T("notice")}] {chapterName}"), jsonPath));
+                                string encodedName = HttpUtility.HtmlEncode($"[{Lang.T("notice")}] {chapterName}");
+                                threads.Add(new Thread(() =>
+                                {
+                                    DownloadChapter(capturedId, capturedName, capturedPath, true, 0);
+                                    if (saveAsEpub && File.Exists(capturedPath))
+                                    {
+                                        string html = BuildChapterHtml(encodedName, capturedPath, keepHtml, removeBlank, downloadImage, images);
+                                        if (html != null)
+                                            chapterHtmls[capturedPath] = html;
+                                    }
+                                }));
+                                chapterNames.Add((encodedName, capturedPath));
                                 noticeNo++;
                             }
                         }
@@ -421,8 +435,18 @@ namespace NovelpiaDownloader
                             string chapterName = chapter.Groups[2].Value;
                             string jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
                             int capturedNo = chapterNo;
-                            threads.Add(new Thread(() => DownloadChapter(chapterId, chapterName, jsonPath, false, capturedNo)));
-                            chapterNames.Add((HttpUtility.HtmlEncode(chapterName), jsonPath));
+                            string encodedName = HttpUtility.HtmlEncode(chapterName);
+                            threads.Add(new Thread(() =>
+                            {
+                                DownloadChapter(chapterId, chapterName, jsonPath, false, capturedNo);
+                                if (saveAsEpub && File.Exists(jsonPath))
+                                {
+                                    string html = BuildChapterHtml(encodedName, jsonPath, keepHtml, removeBlank, downloadImage, images);
+                                    if (html != null)
+                                        chapterHtmls[jsonPath] = html;
+                                }
+                            }));
+                            chapterNames.Add((encodedName, jsonPath));
                         }
                         // refresh "chapter list progress" line
                         int foundCnt = chapterNames.Count;
@@ -447,10 +471,37 @@ namespace NovelpiaDownloader
                         { int len = ConsoleBox.TextLength - capturedStart; ConsoleBox.Select(capturedStart, len); ConsoleBox.SelectedText = Lang.T("chapter_list_done", foundCnt) + "\r\n"; ConsoleBox.SelectionStart = ConsoleBox.TextLength; ConsoleBox.ScrollToCaret(); }
                     }
 
+                    string title = null, author = null, titleEnc = null, authorEnc = null, cover_url = null, coverPath = null;
+                    Thread coverThread = null;
+                    if (saveAsEpub)
+                    {
+                        var match = Regex.Match(novelPageHtml, @"productName = '(.+?)';");
+                        title = match.Groups[1].Value;
+                        match = Regex.Match(novelPageHtml, @"<meta[^]>]+name=[""']author[""'][^]>]+content=[""']([^""']+)[""']");
+                        author = match.Success ? match.Groups[1].Value : "";
+                        titleEnc = HttpUtility.HtmlEncode(title);
+                        authorEnc = HttpUtility.HtmlEncode(author);
+                        match = Regex.Match(novelPageHtml, @"href=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
+                        string url = match.Groups[1].Value;
+                        if (string.IsNullOrEmpty(url))
+                        {
+                            match = Regex.Match(novelPageHtml, @"src=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
+                            url = match.Groups[1].Value;
+                        }
+                        cover_url = url;
+                        coverPath = Path.Combine(directory, "cover.bin");
+                        if (downloadImage && !_cancelRequested && !string.IsNullOrEmpty(cover_url))
+                        {
+                            coverThread = new Thread(() => DownloadImage(cover_url, coverPath, Lang.T("cover"), countProgress: false));
+                            coverThread.Start();
+                        }
+                    }
+
                     BeginProgressPhase(threads.Count, Lang.T("phase_chapters"));
                     ExecuteThreads(threads, thread_num, interval);
                     EndProgressPhase(Lang.T("phase_chapters"));
                     threads.Clear();
+                    coverThread?.Join();
                     if (_cancelRequested)
                         Log(Lang.T("cancelled"));
                     else if (_hadFatalError)
@@ -458,88 +509,16 @@ namespace NovelpiaDownloader
 
                     if (saveAsEpub)
                     {
-                        string responseText = novelPageHtml;
-                        var match = Regex.Match(responseText, @"productName = '(.+?)';");
-                        string title = match.Groups[1].Value;
-                        match = Regex.Match(responseText, @"<meta[^>]+name=[""']author[""'][^>]+content=[""']([^""']+)[""']");
-                        string author = match.Success ? match.Groups[1].Value : "";
-                        string titleEnc = HttpUtility.HtmlEncode(title);
-                        string authorEnc = HttpUtility.HtmlEncode(author);
-                        match = Regex.Match(responseText, @"href=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
-                        string url = match.Groups[1].Value;
-                        if (string.IsNullOrEmpty(url))
-                        {
-                            match = Regex.Match(responseText, @"src=""(//images\.novelpia\.com/imagebox/cover/.+?\.file)""");
-                            url = match.Groups[1].Value;
-                        }
-
-                        string cover_url = url;
-                        string coverPath = Path.Combine(directory, "cover.bin");
-                        if (downloadImage && !_cancelRequested && !string.IsNullOrEmpty(cover_url))
-                            threads.Add(new Thread(() => DownloadImage(cover_url, coverPath, Lang.T("cover"))));
-
                         var entries = new List<(string name, byte[] data)>();
                         var htmlNames = new List<string>(chapterNames.Count);
-                        var imagePaths = new List<string>();
-                        int imageNo = 1;
 
                         foreach (var s in chapterNames)
                         {
                             string htmlName = Path.ChangeExtension(Path.GetFileName(s.Item2), "html");
                             htmlNames.Add(htmlName);
-                            if (!File.Exists(s.Item2))
+                            if (!chapterHtmls.TryGetValue(s.Item2, out string html))
                                 continue;
-                            var sb = new StringBuilder();
-                            sb.Append(EpubTemplate.chapter);
-                            sb.Append("<h1>").Append(s.Item1).Append("</h1>\n<p>&nbsp;</p>\n");
-                            var pendingTags = new List<string>();
-                            var serializer = new JavaScriptSerializer();
-                            using (var reader = new StreamReader(s.Item2, Encoding.UTF8))
-                            {
-                                var texts = serializer.Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
-                                foreach (var text in (ArrayList)texts["s"])
-                                {
-                                    var textDict = (Dictionary<string, object>)text;
-                                    string textStr = (string)textDict["text"];
-                                    var imatch = Regex.Match(textStr, @"<img.+?src=\""(.+?)\"".+?>");
-                                    if (imatch.Success)
-                                    {
-                                        if (!textStr.Contains("cover-wrapper"))
-                                        {
-                                            if (downloadImage)
-                                            {
-                                                string image_url = imatch.Groups[1].Value;
-                                                int image_no = imageNo;
-                                                string imgPath = Path.Combine(directory, $"img_{image_no}.bin");
-                                                if (!_cancelRequested)
-                                                    threads.Add(new Thread(() => DownloadImage(image_url, imgPath, Lang.T("illustration"))));
-                                                imagePaths.Add(imgPath);
-                                                textStr = Regex.Replace(textStr, @"<img.+?src=\"".+?\"".+?>",
-                                                    $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.__EXT__\" width=\"100%\"/>");
-                                                sb.Append("<p>").Append(textStr).Append("</p>\n");
-                                                imageNo++;
-                                            }
-                                            else if (!removeBlank)
-                                            {
-                                                sb.Append("<p>&#160;</p>\n");
-                                            }
-                                        }
-                                        continue;
-                                    }
-                                    textStr = CleanText(textStr, keepHtml, pendingTags);
-                                    if (textStr == "")
-                                    {
-                                        if (!removeBlank)
-                                            sb.Append("<p>&#160;</p>\n");
-                                        continue;
-                                    }
-                                    if (font_mapping != null)
-                                        textStr = font_mapping.DecodeText(textStr);
-                                    sb.Append("<p>").Append(textStr).Append("</p>\n");
-                                }
-                            }
-                            sb.Append("</body>\n</html>\n");
-                            entries.Add(($"OEBPS/Text/chapter{htmlName}", Encoding.UTF8.GetBytes(sb.ToString())));
+                            entries.Add(("OEBPS/Text/chapter" + htmlName, Encoding.UTF8.GetBytes(html)));
                             File.Delete(s.Item2);
                         }
 
@@ -566,26 +545,22 @@ namespace NovelpiaDownloader
                             opf.Append("<dc:creator opf:role=\"aut\">").Append(authorEnc).Append("</dc:creator>\n");
                         opf.Append($"<dc:date>{DateTime.UtcNow:yyyy-MM-dd}</dc:date>\n");
 
-                        if (threads.Count > 0)
-                        {
-                            BeginProgressPhase(threads.Count, Lang.T("phase_images"));
-                            ExecuteThreads(threads, thread_num, interval);
-                            EndProgressPhase(Lang.T("phase_images"));
-                        }
-
                         string coverExt = "jpg";
                         string coverMime = "image/jpeg";
                         if (hasCover && File.Exists(coverPath))
                             DetectImageType(coverPath, out coverExt, out coverMime);
-                        var imageExts = new string[imagePaths.Count];
-                        var imageMimes = new string[imagePaths.Count];
-                        for (int i = 0; i < imagePaths.Count; i++)
+                        var imageExts = new Dictionary<int, string>();
+                        var imageMimes = new Dictionary<int, string>();
+                        foreach (var kv in images.Paths)
                         {
-                            string ie, im;
-                            if (File.Exists(imagePaths[i]) && DetectImageType(imagePaths[i], out ie, out im))
-                            { imageExts[i] = ie; imageMimes[i] = im; }
-                            else { imageExts[i] = "jpg"; imageMimes[i] = "image/jpeg"; }
+                            int no = kv.Key;
+                            string ip = kv.Value;
+                            if (File.Exists(ip) && DetectImageType(ip, out string ie, out string im))
+                            { imageExts[no] = ie; imageMimes[no] = im; }
+                            else { imageExts[no] = "jpg"; imageMimes[no] = "image/jpeg"; }
                         }
+                        var orderedImageNos = images.Keys.OrderBy(k => k).ToArray();
+
                         for (int i = 0; i < entries.Count; i++)
                         {
                             var (n, d) = entries[i];
@@ -593,7 +568,7 @@ namespace NovelpiaDownloader
                             s = Regex.Replace(s, @"src=""\.\./Images/(\d+)\.__EXT__""", m =>
                             {
                                 int k = int.Parse(m.Groups[1].Value);
-                                string e2 = (k >= 1 && k <= imageExts.Length) ? imageExts[k - 1] : "jpg";
+                                string e2 = imageExts.ContainsKey(k) ? imageExts[k] : "jpg";
                                 return $"src=\"../Images/{k}.{e2}\"";
                             });
                             entries[i] = (n, Encoding.UTF8.GetBytes(s));
@@ -608,8 +583,8 @@ namespace NovelpiaDownloader
                         }
                         for (int i = 0; i < chapterNames.Count; i++)
                             opf.Append($"<item id=\"chapter{htmlNames[i]}\" href=\"Text/chapter{htmlNames[i]}\" media-type=\"application/xhtml+xml\"/>\n");
-                        for (int i = 1; i < imageNo; i++)
-                            opf.Append($"<item id=\"img{i}\" href=\"Images/{i}.{imageExts[i - 1]}\" media-type=\"{imageMimes[i - 1]}\"/>\n");
+                        foreach (int no in orderedImageNos)
+                            opf.Append($"<item id=\"img{no}\" href=\"Images/{no}.{imageExts[no]}\" media-type=\"{imageMimes[no]}\"/>\n");
                         opf.Append("</manifest>\n<spine toc=\"ncx\">\n");
                         if (hasCover)
                             opf.Append("<itemref idref=\"cover.html\"/>\n");
@@ -635,11 +610,12 @@ namespace NovelpiaDownloader
                                 zip.AddEntry("OEBPS/Text/cover.html", EpubTemplate.cover.Replace("__COVER_EXT__", coverExt), now);
                             if (hasCover && File.Exists(coverPath))
                                 zip.AddEntry($"OEBPS/Images/cover.{coverExt}", File.ReadAllBytes(coverPath), now);
-                            for (int i = 0; i < imagePaths.Count; i++)
+                            foreach (int no in orderedImageNos)
                             {
-                                string ip = imagePaths[i];
+                                if (!images.TryGetPath(no, out string ip))
+                                    continue;
                                 if (File.Exists(ip))
-                                    zip.AddEntry($"OEBPS/Images/{i + 1}.{imageExts[i]}", File.ReadAllBytes(ip), now);
+                                    zip.AddEntry($"OEBPS/Images/{no}.{imageExts[no]}", File.ReadAllBytes(ip), now);
                             }
                             foreach (var entry in entries)
                                 zip.AddEntry(entry.name, entry.data, now);
@@ -707,6 +683,18 @@ namespace NovelpiaDownloader
         private volatile bool _stopOnError;
         private volatile bool _hadFatalError;
         private int _retryCount;
+
+        private class ImageContext
+        {
+            private int _next = 1;
+            private readonly ConcurrentDictionary<int, string> _paths = new ConcurrentDictionary<int, string>();
+
+            public int GetNextNo() => Interlocked.Increment(ref _next);
+            public void SetPath(int no, string path) => _paths[no] = path;
+            public bool TryGetPath(int no, out string path) => _paths.TryGetValue(no, out path);
+            public IEnumerable<KeyValuePair<int, string>> Paths => _paths;
+            public IEnumerable<int> Keys => _paths.Keys;
+        }
 
         private void DownloadChapter(string chapterId, string chapterName, string jsonPath, bool isNotice, int epNo)
         {
@@ -794,6 +782,68 @@ namespace NovelpiaDownloader
                 textStr = sb.ToString();
             }
             return textStr.Replace("\n", "").Replace("\r", "");
+        }
+
+        private string BuildChapterHtml(string encodedName, string jsonPath, bool keepHtml, bool removeBlank, bool downloadImage, ImageContext images)
+        {
+            try
+            {
+                var sb = new StringBuilder();
+                sb.Append(EpubTemplate.chapter);
+                sb.Append("<h1>").Append(encodedName).Append("</h1>\n<p>&nbsp;</p>\n");
+                var pendingTags = new List<string>();
+                var serializer = new JavaScriptSerializer();
+                using (var reader = new StreamReader(jsonPath, Encoding.UTF8))
+                {
+                    var texts = serializer.Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
+                    foreach (var text in (ArrayList)texts["s"])
+                    {
+                        var textDict = (Dictionary<string, object>)text;
+                        string textStr = (string)textDict["text"];
+                        var imatch = Regex.Match(textStr, @"<img.+?src=""(.+?)"".+?>");
+                        if (imatch.Success)
+                        {
+                            if (!textStr.Contains("cover-wrapper"))
+                            {
+                                if (downloadImage)
+                                {
+                                    int imageNo = images.GetNextNo();
+                                    string image_url = imatch.Groups[1].Value;
+                                    string imgPath = Path.Combine(Path.GetDirectoryName(jsonPath), $"img_{imageNo}.bin");
+                                    images.SetPath(imageNo, imgPath);
+                                    if (!_cancelRequested && !_hadFatalError)
+                                        DownloadImage(image_url, imgPath, Lang.T("illustration"), countProgress: false);
+                                    textStr = Regex.Replace(textStr, @"<img.+?src="".+?"".+?>",
+                                        $"<img alt=\"{imageNo}\" src=\"../Images/{imageNo}.__EXT__\" width=\"100%\"/>");
+                                    sb.Append("<p>").Append(textStr).Append("</p>\n");
+                                }
+                                else if (!removeBlank)
+                                {
+                                    sb.Append("<p>&#160;</p>\n");
+                                }
+                            }
+                            continue;
+                        }
+                        textStr = CleanText(textStr, keepHtml, pendingTags);
+                        if (textStr == "")
+                        {
+                            if (!removeBlank)
+                                sb.Append("<p>&#160;</p>\n");
+                            continue;
+                        }
+                        if (font_mapping != null)
+                            textStr = font_mapping.DecodeText(textStr);
+                        sb.Append("<p>").Append(textStr).Append("</p>\n");
+                    }
+                }
+                sb.Append("</body>\n</html>\n");
+                return sb.ToString();
+            }
+            catch (Exception ex)
+            {
+                InsertLineAboveProgress($"  ✗ {encodedName}  ({ex.Message})");
+                return null;
+            }
         }
 
         private void Log(string message)
@@ -916,16 +966,16 @@ namespace NovelpiaDownloader
             ConsoleBox.ScrollToCaret();
         }
 
-        private void DownloadImage(string url, string path, string type)
+        private void DownloadImage(string url, string path, string type, bool countProgress = true)
         {
-            if (_cancelRequested || _hadFatalError) { Interlocked.Increment(ref _progress_skip); return; }
+            if (_cancelRequested || _hadFatalError) { if (countProgress) Interlocked.Increment(ref _progress_skip); return; }
             if (!url.StartsWith("http"))
                 url = "https:" + url;
             string label = $"{type} {Path.GetFileNameWithoutExtension(path)}";
             int retry = _retryCount;
             for (int attempt = 0; attempt <= retry; attempt++)
             {
-                if (_cancelRequested || _hadFatalError) { Interlocked.Increment(ref _progress_skip); return; }
+                if (_cancelRequested || _hadFatalError) { if (countProgress) Interlocked.Increment(ref _progress_skip); return; }
                 try
                 {
                     var request = (HttpWebRequest)WebRequest.Create(url);
@@ -946,9 +996,9 @@ namespace NovelpiaDownloader
                             dst.Write(buf, 0, n);
                         }
                     }
-                    Interlocked.Increment(ref _progress_done);
+                    if (countProgress) Interlocked.Increment(ref _progress_done);
                     InsertLineAboveProgress($"  ✓ {label}");
-                    UpdateProgressThrottled();
+                    if (countProgress) UpdateProgressThrottled();
                     return;
                 }
                 catch
@@ -958,9 +1008,9 @@ namespace NovelpiaDownloader
                         InsertLineAboveProgress(Lang.T("chapter_retry", attempt + 1, retry).TrimEnd('\r', '\n'));
                     else
                     {
-                        Interlocked.Increment(ref _progress_fail);
+                        if (countProgress) Interlocked.Increment(ref _progress_fail);
                         InsertLineAboveProgress($"  ✗ {label}  ({url})");
-                        UpdateProgressThrottled(force: true);
+                        if (countProgress) UpdateProgressThrottled(force: true);
                         if (_stopOnError) _hadFatalError = true;
                     }
                 }
