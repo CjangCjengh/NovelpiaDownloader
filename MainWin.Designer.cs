@@ -39,6 +39,8 @@
             this.PasswordLabel = new System.Windows.Forms.Label();
             this.EmailLabel = new System.Windows.Forms.Label();
             this.DownloadGroup = new System.Windows.Forms.GroupBox();
+            this.GothicCheck = new System.Windows.Forms.CheckBox();
+            this.VerticalCheck = new System.Windows.Forms.CheckBox();
             this.StopOnErrorCheck = new System.Windows.Forms.CheckBox();
             this.IncludeNovelNoCheck = new System.Windows.Forms.CheckBox();
             this.IncludeChapterRangeCheck = new System.Windows.Forms.CheckBox();
@@ -176,6 +178,8 @@
             // DownloadGroup
             // 
             this.DownloadGroup.Controls.Add(this.StopOnErrorCheck);
+            this.DownloadGroup.Controls.Add(this.GothicCheck);
+            this.DownloadGroup.Controls.Add(this.VerticalCheck);
             this.DownloadGroup.Controls.Add(this.IncludeNovelNoCheck);
             this.DownloadGroup.Controls.Add(this.IncludeChapterRangeCheck);
             this.DownloadGroup.Controls.Add(this.DownloadImageCheck);
@@ -201,7 +205,7 @@
             this.DownloadGroup.Controls.Add(this.NovelNoLable);
             this.DownloadGroup.Location = new System.Drawing.Point(12, 255);
             this.DownloadGroup.Name = "DownloadGroup";
-            this.DownloadGroup.Size = new System.Drawing.Size(439, 318);
+            this.DownloadGroup.Size = new System.Drawing.Size(439, 347);
             this.DownloadGroup.TabIndex = 2;
             this.DownloadGroup.TabStop = false;
             this.DownloadGroup.Text = "다운로드";
@@ -235,9 +239,31 @@
             this.IncludeChapterRangeCheck.TabIndex = 32;
             this.IncludeChapterRangeCheck.Text = "파일명에 화수 범위 추가";
             this.IncludeChapterRangeCheck.UseVisualStyleBackColor = true;
-            // 
+            //
+            // VerticalCheck
+            //
+            this.VerticalCheck.AutoSize = true;
+            this.VerticalCheck.Location = new System.Drawing.Point(15, 184);
+            this.VerticalCheck.Name = "VerticalCheck";
+            this.VerticalCheck.Size = new System.Drawing.Size(88, 29);
+            this.VerticalCheck.TabIndex = 33;
+            this.VerticalCheck.Text = "세로 쓰기";
+            this.VerticalCheck.UseVisualStyleBackColor = true;
+            //
+            // GothicCheck
+            //
+            this.GothicCheck.AutoSize = true;
+            this.GothicCheck.Checked = true;
+            this.GothicCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.GothicCheck.Location = new System.Drawing.Point(220, 184);
+            this.GothicCheck.Name = "GothicCheck";
+            this.GothicCheck.Size = new System.Drawing.Size(109, 29);
+            this.GothicCheck.TabIndex = 34;
+            this.GothicCheck.Text = "돋움체";
+            this.GothicCheck.UseVisualStyleBackColor = true;
+            //
             // DownloadImageCheck
-            // 
+            //
             this.DownloadImageCheck.AutoSize = true;
             this.DownloadImageCheck.Checked = true;
             this.DownloadImageCheck.CheckState = System.Windows.Forms.CheckState.Checked;
@@ -310,7 +336,7 @@
             // 
             // OutputDirButton
             // 
-            this.OutputDirButton.Location = new System.Drawing.Point(353, 188);
+            this.OutputDirButton.Location = new System.Drawing.Point(353, 217);
             this.OutputDirButton.Name = "OutputDirButton";
             this.OutputDirButton.Size = new System.Drawing.Size(75, 32);
             this.OutputDirButton.TabIndex = 21;
@@ -320,7 +346,7 @@
             // 
             // OutputDirText
             // 
-            this.OutputDirText.Location = new System.Drawing.Point(110, 190);
+            this.OutputDirText.Location = new System.Drawing.Point(110, 219);
             this.OutputDirText.Name = "OutputDirText";
             this.OutputDirText.Size = new System.Drawing.Size(237, 31);
             this.OutputDirText.TabIndex = 20;
@@ -328,7 +354,7 @@
             // OutputDirLabel
             // 
             this.OutputDirLabel.AutoSize = true;
-            this.OutputDirLabel.Location = new System.Drawing.Point(15, 193);
+            this.OutputDirLabel.Location = new System.Drawing.Point(15, 222);
             this.OutputDirLabel.Name = "OutputDirLabel";
             this.OutputDirLabel.Size = new System.Drawing.Size(90, 25);
             this.OutputDirLabel.TabIndex = 19;
@@ -436,7 +462,7 @@
             // 
             // DownloadButton
             // 
-            this.DownloadButton.Location = new System.Drawing.Point(347, 268);
+            this.DownloadButton.Location = new System.Drawing.Point(347, 297);
             this.DownloadButton.Name = "DownloadButton";
             this.DownloadButton.Size = new System.Drawing.Size(80, 36);
             this.DownloadButton.TabIndex = 10;
@@ -447,7 +473,7 @@
             // TxtButton
             // 
             this.TxtButton.AutoSize = true;
-            this.TxtButton.Location = new System.Drawing.Point(180, 270);
+            this.TxtButton.Location = new System.Drawing.Point(180, 299);
             this.TxtButton.Name = "TxtButton";
             this.TxtButton.Size = new System.Drawing.Size(68, 29);
             this.TxtButton.TabIndex = 8;
@@ -458,7 +484,7 @@
             // 
             this.EpubButton.AutoSize = true;
             this.EpubButton.Checked = true;
-            this.EpubButton.Location = new System.Drawing.Point(85, 270);
+            this.EpubButton.Location = new System.Drawing.Point(85, 299);
             this.EpubButton.Name = "EpubButton";
             this.EpubButton.Size = new System.Drawing.Size(80, 29);
             this.EpubButton.TabIndex = 7;
@@ -468,7 +494,7 @@
             // 
             // NovelNoText
             // 
-            this.NovelNoText.Location = new System.Drawing.Point(110, 232);
+            this.NovelNoText.Location = new System.Drawing.Point(110, 261);
             this.NovelNoText.Name = "NovelNoText";
             this.NovelNoText.Size = new System.Drawing.Size(317, 31);
             this.NovelNoText.TabIndex = 6;
@@ -476,7 +502,7 @@
             // ExtensionLabel
             // 
             this.ExtensionLabel.AutoSize = true;
-            this.ExtensionLabel.Location = new System.Drawing.Point(15, 273);
+            this.ExtensionLabel.Location = new System.Drawing.Point(15, 302);
             this.ExtensionLabel.Name = "ExtensionLabel";
             this.ExtensionLabel.Size = new System.Drawing.Size(48, 25);
             this.ExtensionLabel.TabIndex = 1;
@@ -485,7 +511,7 @@
             // NovelNoLable
             // 
             this.NovelNoLable.AutoSize = true;
-            this.NovelNoLable.Location = new System.Drawing.Point(15, 235);
+            this.NovelNoLable.Location = new System.Drawing.Point(15, 264);
             this.NovelNoLable.Name = "NovelNoLable";
             this.NovelNoLable.Size = new System.Drawing.Size(90, 25);
             this.NovelNoLable.TabIndex = 0;
@@ -548,7 +574,7 @@
             // 
             // AddToListButton
             // 
-            this.AddToListButton.Location = new System.Drawing.Point(244, 270);
+            this.AddToListButton.Location = new System.Drawing.Point(244, 299);
             this.AddToListButton.Name = "AddToListButton";
             this.AddToListButton.Size = new System.Drawing.Size(120, 36);
             this.AddToListButton.TabIndex = 54;
@@ -668,7 +694,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(890, 631);
+            this.ClientSize = new System.Drawing.Size(890, 660);
             this.Controls.Add(this.LanguageBox);
             this.Controls.Add(this.QueueDeleteAllButton);
             this.Controls.Add(this.QueueDeleteSelectedButton);
@@ -690,7 +716,7 @@
             this.Font = new System.Drawing.Font("Malgun Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.MinimumSize = new System.Drawing.Size(906, 681);
+            this.MinimumSize = new System.Drawing.Size(906, 710);
             this.Name = "MainWin";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "NovelpiaDownloader";
@@ -761,5 +787,7 @@
         internal System.Windows.Forms.CheckBox StopOnErrorCheck;
         internal System.Windows.Forms.CheckBox IncludeNovelNoCheck;
         internal System.Windows.Forms.CheckBox IncludeChapterRangeCheck;
+        internal System.Windows.Forms.CheckBox VerticalCheck;
+        internal System.Windows.Forms.CheckBox GothicCheck;
     }
 }

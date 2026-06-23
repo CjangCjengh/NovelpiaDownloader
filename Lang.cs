@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -420,6 +421,12 @@ namespace NovelpiaDownloader
             { "ui_include_chapter_range", new Dictionary<string, string> {
                 { Ko, "파일명에 화수 범위 추가" }, { En, "Add Ep. range to filename" }, { ZhCn, "文件名加话数" }, { ZhTw, "檔名加話數" },
                 { Ja, "ファイル名に話数追加" }, { Vi, "Thêm phạm vi tập vào tên" }, { Th, "เพิ่มช่วงตอนในชื่อ" }, { Id, "Tambah rentang Ep ke nama" } } },
+            { "ui_vertical", new Dictionary<string, string> {
+                { Ko, "세로 쓰기" }, { En, "Vertical" }, { ZhCn, "竖排" }, { ZhTw, "直排" },
+                { Ja, "縦書き" }, { Vi, "Dọc" }, { Th, "แนวตั้ง" }, { Id, "Vertikal" } } },
+            { "ui_gothic", new Dictionary<string, string> {
+                { Ko, "돋움체 (기본값: 바탕체)" }, { En, "Gothic (default Batang)" }, { ZhCn, "黑体（默认宋体）" }, { ZhTw, "黑體（預設宋體）" },
+                { Ja, "ゴシック体（既定：明朝）" }, { Vi, "Font Gothic (mặc định Batang)" }, { Th, "ฟอนต์ Gothic (ค่าเริ่มต้น Batang)" }, { Id, "Font Gothic (default Batang)" } } },
         };
 
         public static string T(string key)
@@ -501,6 +508,8 @@ namespace NovelpiaDownloader
             f.StopOnErrorCheck.Text = T("ui_stop_on_error");
             f.IncludeNovelNoCheck.Text = T("ui_include_novel_no");
             f.IncludeChapterRangeCheck.Text = T("ui_include_chapter_range");
+            f.VerticalCheck.Text = T("ui_vertical");
+            f.GothicCheck.Text = T("ui_gothic");
 
             f.ThreadLabel.Text = T("ui_threads");
             f.IntervalLabel.Text = T("ui_interval");
@@ -576,36 +585,42 @@ namespace NovelpiaDownloader
             f.IncludeNovelNoCheck.Location = new Point(15, 155);
             f.IncludeChapterRangeCheck.Location = new Point(col2X, 155);
 
-            f.OutputDirLabel.Location = new Point(15, 188);
+            f.VerticalCheck.AutoSize = true;
+            f.GothicCheck.AutoSize = true;
+            f.VerticalCheck.Location = new Point(15, 184);
+            int verticalRight = f.VerticalCheck.Location.X + MeasureWidth(f.VerticalCheck, f.VerticalCheck.Text, 24);
+            f.GothicCheck.Location = new Point(Math.Max(col2X, verticalRight + 16), 184);
+
+            f.OutputDirLabel.Location = new Point(15, 217);
             int saveLabelRight = f.OutputDirLabel.Location.X + MeasureWidth(f.OutputDirLabel, f.OutputDirLabel.Text, 8);
             int browseBtnW = MeasureWidth(f.OutputDirButton, f.OutputDirButton.Text, 26);
             if (browseBtnW < 70) browseBtnW = 70;
             int outputRightEdge = f.DownloadGroup.ClientSize.Width - 12;
             f.OutputDirButton.Size = new Size(browseBtnW, 32);
-            f.OutputDirButton.Location = new Point(outputRightEdge - browseBtnW, 185);
-            f.OutputDirText.Location = new Point(saveLabelRight + 4, 185);
+            f.OutputDirButton.Location = new Point(outputRightEdge - browseBtnW, 214);
+            f.OutputDirText.Location = new Point(saveLabelRight + 4, 214);
             f.OutputDirText.Size = new Size(f.OutputDirButton.Location.X - 6 - f.OutputDirText.Location.X, 31);
 
-            f.NovelNoLable.Location = new Point(15, 227);
+            f.NovelNoLable.Location = new Point(15, 256);
             int novelLabelRight = f.NovelNoLable.Location.X + MeasureWidth(f.NovelNoLable, f.NovelNoLable.Text, 8);
-            f.NovelNoText.Location = new Point(novelLabelRight + 4, 224);
+            f.NovelNoText.Location = new Point(novelLabelRight + 4, 253);
             f.NovelNoText.Size = new Size(outputRightEdge - f.NovelNoText.Location.X, 31);
 
-            f.ExtensionLabel.Location = new Point(15, 264);
+            f.ExtensionLabel.Location = new Point(15, 293);
             int extLabelRight = f.ExtensionLabel.Location.X + MeasureWidth(f.ExtensionLabel, f.ExtensionLabel.Text, 8);
-            f.EpubButton.Location = new Point(extLabelRight + 4, 261);
+            f.EpubButton.Location = new Point(extLabelRight + 4, 290);
             int epubRight = f.EpubButton.Location.X + MeasureWidth(f.EpubButton, f.EpubButton.Text, 28);
-            f.TxtButton.Location = new Point(epubRight + 8, 261);
+            f.TxtButton.Location = new Point(epubRight + 8, 290);
 
             int dlBtnW = MeasureWidth(f.DownloadButton, f.DownloadButton.Text, 28);
             if (dlBtnW < 80) dlBtnW = 80;
             f.DownloadButton.Size = new Size(dlBtnW, 36);
-            f.DownloadButton.Location = new Point(outputRightEdge - dlBtnW, 259);
+            f.DownloadButton.Location = new Point(outputRightEdge - dlBtnW, 288);
 
             int addBtnW = MeasureWidth(f.AddToListButton, f.AddToListButton.Text, 28);
             if (addBtnW < 80) addBtnW = 80;
             f.AddToListButton.Size = new Size(addBtnW, 36);
-            f.AddToListButton.Location = new Point(f.DownloadButton.Location.X - 8 - addBtnW, 259);
+            f.AddToListButton.Location = new Point(f.DownloadButton.Location.X - 8 - addBtnW, 288);
 
             int dlGroupBottomInner = f.DownloadButton.Location.Y + f.DownloadButton.Size.Height + 18;
 

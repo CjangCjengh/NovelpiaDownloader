@@ -54,6 +54,10 @@ namespace NovelpiaDownloader
                     IncludeNovelNoCheck.Checked = config_dict["include_novel_no"];
                 if (config_dict.ContainsKey("include_chapter_range"))
                     IncludeChapterRangeCheck.Checked = config_dict["include_chapter_range"];
+                if (config_dict.ContainsKey("vertical"))
+                    VerticalCheck.Checked = config_dict["vertical"];
+                if (config_dict.ContainsKey("gothic"))
+                    GothicCheck.Checked = config_dict["gothic"];
                 if (config_dict.ContainsKey("email") && config_dict.ContainsKey("wd"))
                     if (novelpia.Login(EmailText.Text = config_dict["email"], PasswordText.Text = config_dict["wd"]))
                     {
@@ -97,6 +101,7 @@ namespace NovelpiaDownloader
             public string title;
             public bool saveAsEpub, includeNotice, removeBlank, keepHtml, compress, downloadImage, stopOnError;
             public bool includeNovelNoInName, includeChapterRangeInName;
+            public bool vertical, gothic;
             public bool fromChecked, toChecked;
             public int fromN, toN;
             public int retry, threadNum;
@@ -142,6 +147,8 @@ namespace NovelpiaDownloader
                 stopOnError = StopOnErrorCheck.Checked,
                 includeNovelNoInName = IncludeNovelNoCheck.Checked,
                 includeChapterRangeInName = IncludeChapterRangeCheck.Checked,
+                vertical = VerticalCheck.Checked,
+                gothic = GothicCheck.Checked,
                 fromChecked = FromCheck.Checked,
                 toChecked = ToCheck.Checked,
                 fromN = (int)FromNum.Value,
@@ -218,7 +225,8 @@ namespace NovelpiaDownloader
                 if (existing.novelNo == job.novelNo &&
                     existing.fromChecked == job.fromChecked && existing.toChecked == job.toChecked &&
                     existing.fromN == job.fromN && existing.toN == job.toN &&
-                    existing.saveAsEpub == job.saveAsEpub)
+                    existing.saveAsEpub == job.saveAsEpub &&
+                    existing.vertical == job.vertical && existing.gothic == job.gothic)
                 {
                     Log(Lang.T("queue_dup", FormatJobLabel(job)));
                     return;
@@ -336,6 +344,8 @@ namespace NovelpiaDownloader
             bool keepHtml = job.keepHtml;
             bool compress = job.compress;
             bool downloadImage = job.downloadImage;
+            bool vertical = job.vertical;
+            bool gothic = job.gothic;
             int retry = job.retry;
             string path = job.targetPath;
             Log(Lang.T("sep") + Lang.T("download_start"));
@@ -620,7 +630,7 @@ namespace NovelpiaDownloader
                             zip.AddEntry("mimetype", "application/epub+zip", now);
                             zip.AddEntry("META-INF/container.xml", EpubTemplate.container, now);
                             zip.AddEntry("OEBPS/Styles/sgc-toc.css", EpubTemplate.sgctoc, now);
-                            zip.AddEntry("OEBPS/Styles/Stylesheet.css", EpubTemplate.stylesheet, now);
+                            zip.AddEntry("OEBPS/Styles/Stylesheet.css", EpubTemplate.Stylesheet(vertical, gothic), now);
                             if (hasCover)
                                 zip.AddEntry("OEBPS/Text/cover.html", EpubTemplate.cover.Replace("__COVER_EXT__", coverExt), now);
                             if (hasCover && File.Exists(coverPath))
@@ -1080,7 +1090,9 @@ namespace NovelpiaDownloader
                 { "download_image", DownloadImageCheck.Checked },
                 { "stop_on_error", StopOnErrorCheck.Checked },
                 { "include_novel_no", IncludeNovelNoCheck.Checked },
-                { "include_chapter_range", IncludeChapterRangeCheck.Checked }
+                { "include_chapter_range", IncludeChapterRangeCheck.Checked },
+                { "vertical", VerticalCheck.Checked },
+                { "gothic", GothicCheck.Checked }
             };
             using (StreamWriter sw = new StreamWriter("config.json"))
             {

@@ -1,4 +1,6 @@
-﻿namespace NovelpiaDownloader
+﻿using System.Text;
+
+namespace NovelpiaDownloader
 {
     public static class EpubTemplate
     {
@@ -43,7 +45,7 @@
             "div.sgc-toc-level-6 {\n" +
             "margin-left: 2em;\n" +
             "}\n";
-        public static string stylesheet = ".border01 {\n" +
+        public static string _baseStylesheet = ".border01 {\n" +
             "\n" +
             "border: 2px solid black;\n" +
             "padding: 1.0em;\n" +
@@ -268,6 +270,40 @@
             "background-color: #FFFF00;\n" +
             "border-radius: 0.5em;\n" +
             "}\n";
+
+        public static string Stylesheet(bool vertical, bool gothic)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("body{");
+            sb.AppendLine("margin:0;");
+            if (vertical)
+                sb.AppendLine("padding:0 1em 0 0;");
+            else
+                sb.AppendLine("padding:0;");
+            if (vertical)
+            {
+                if (gothic)
+                    sb.AppendLine("font-family: \"@Malgun Gothic\",\"Malgun Gothic\",\"Dotum\",\"Gulim\",sans-serif;");
+                else
+                    sb.AppendLine("font-family: \"@Batang\",\"Batang\",\"Gungsuh\",serif;");
+                sb.AppendLine("line-height: 1.8em;");
+                sb.AppendLine("writing-mode: vertical-rl;");
+                sb.AppendLine("text-orientation: mixed;");
+                sb.AppendLine("-epub-writing-mode: vertical-rl;");
+            }
+            else
+            {
+                if (gothic)
+                    sb.AppendLine("font-family: \"Malgun Gothic\",\"Dotum\",\"Gulim\",sans-serif;");
+                else
+                    sb.AppendLine("font-family: \"Batang\",\"Gungsuh\",\"KoPub바탕체 Light\",\"KoPub돋움체 Light\",serif;");
+                sb.AppendLine("line-height: 1.6em;");
+            }
+            sb.AppendLine("}");
+            const string oldBody = "body{\nmargin:0;\npadding:0;\nfont-family: 'KoPub바탕체 Light', 'KoPub돋움체 Light';\n}\n";
+            return _baseStylesheet.Replace(oldBody, sb.ToString());
+        }
+
         public static string toc = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
             "<!DOCTYPE ncx PUBLIC \"-//NISO//DTD ncx 2005-1//EN\"\n" +
             "\"http://www.daisy.org/z3986/2005/ncx-2005-1.dtd\">\n" +
