@@ -41,6 +41,8 @@
             this.DownloadGroup = new System.Windows.Forms.GroupBox();
             this.GothicCheck = new System.Windows.Forms.CheckBox();
             this.VerticalCheck = new System.Windows.Forms.CheckBox();
+            this.BonusNeverCheck = new System.Windows.Forms.CheckBox();
+            this.BonusAlwaysCheck = new System.Windows.Forms.CheckBox();
             this.StopOnErrorCheck = new System.Windows.Forms.CheckBox();
             this.IncludeNovelNoCheck = new System.Windows.Forms.CheckBox();
             this.IncludeChapterRangeCheck = new System.Windows.Forms.CheckBox();
@@ -180,6 +182,8 @@
             this.DownloadGroup.Controls.Add(this.StopOnErrorCheck);
             this.DownloadGroup.Controls.Add(this.GothicCheck);
             this.DownloadGroup.Controls.Add(this.VerticalCheck);
+            this.DownloadGroup.Controls.Add(this.BonusNeverCheck);
+            this.DownloadGroup.Controls.Add(this.BonusAlwaysCheck);
             this.DownloadGroup.Controls.Add(this.IncludeNovelNoCheck);
             this.DownloadGroup.Controls.Add(this.IncludeChapterRangeCheck);
             this.DownloadGroup.Controls.Add(this.DownloadImageCheck);
@@ -261,6 +265,26 @@
             this.GothicCheck.TabIndex = 34;
             this.GothicCheck.Text = "돋움체";
             this.GothicCheck.UseVisualStyleBackColor = true;
+            //
+            // BonusNeverCheck
+            //
+            this.BonusNeverCheck.AutoSize = true;
+            this.BonusNeverCheck.Location = new System.Drawing.Point(15, 213);
+            this.BonusNeverCheck.Name = "BonusNeverCheck";
+            this.BonusNeverCheck.Size = new System.Drawing.Size(100, 29);
+            this.BonusNeverCheck.TabIndex = 35;
+            this.BonusNeverCheck.Text = "BONUS 제외";
+            this.BonusNeverCheck.UseVisualStyleBackColor = true;
+            //
+            // BonusAlwaysCheck
+            //
+            this.BonusAlwaysCheck.AutoSize = true;
+            this.BonusAlwaysCheck.Location = new System.Drawing.Point(220, 213);
+            this.BonusAlwaysCheck.Name = "BonusAlwaysCheck";
+            this.BonusAlwaysCheck.Size = new System.Drawing.Size(120, 29);
+            this.BonusAlwaysCheck.TabIndex = 36;
+            this.BonusAlwaysCheck.Text = "BONUS 항상 포함";
+            this.BonusAlwaysCheck.UseVisualStyleBackColor = true;
             //
             // DownloadImageCheck
             //
@@ -789,5 +813,7 @@
         internal System.Windows.Forms.CheckBox IncludeChapterRangeCheck;
         internal System.Windows.Forms.CheckBox VerticalCheck;
         internal System.Windows.Forms.CheckBox GothicCheck;
+        internal System.Windows.Forms.CheckBox BonusNeverCheck;
+        internal System.Windows.Forms.CheckBox BonusAlwaysCheck;
     }
 }

@@ -23,6 +23,9 @@ namespace NovelpiaDownloader
             novelpia = new Novelpia();
             this.SizeChanged += (s, e) => Lang.Relayout(this);
 
+            BonusNeverCheck.CheckedChanged += (s, e) => { if (BonusNeverCheck.Checked && BonusAlwaysCheck.Checked) BonusAlwaysCheck.Checked = false; };
+            BonusAlwaysCheck.CheckedChanged += (s, e) => { if (BonusAlwaysCheck.Checked && BonusNeverCheck.Checked) BonusNeverCheck.Checked = false; };
+
             string lang = Lang.Ko;
             if (File.Exists("config.json"))
             {
@@ -60,6 +63,10 @@ namespace NovelpiaDownloader
                     VerticalCheck.Checked = config_dict["vertical"];
                 if (config_dict.ContainsKey("gothic"))
                     GothicCheck.Checked = config_dict["gothic"];
+                if (config_dict.ContainsKey("bonus_never"))
+                    BonusNeverCheck.Checked = config_dict["bonus_never"];
+                if (config_dict.ContainsKey("bonus_always"))
+                    BonusAlwaysCheck.Checked = config_dict["bonus_always"];
                 if (config_dict.ContainsKey("email") && config_dict.ContainsKey("wd"))
                     if (novelpia.Login(EmailText.Text = config_dict["email"], PasswordText.Text = config_dict["wd"]))
                     {
@@ -104,6 +111,7 @@ namespace NovelpiaDownloader
             public bool saveAsEpub, includeNotice, removeBlank, keepHtml, compress, downloadImage, stopOnError;
             public bool includeNovelNoInName, includeChapterRangeInName;
             public bool vertical, gothic;
+            public bool bonusNever, bonusAlways;
             public bool fromChecked, toChecked;
             public int fromN, toN;
             public int retry, threadNum;
@@ -151,6 +159,8 @@ namespace NovelpiaDownloader
                 includeChapterRangeInName = IncludeChapterRangeCheck.Checked,
                 vertical = VerticalCheck.Checked,
                 gothic = GothicCheck.Checked,
+                bonusNever = BonusNeverCheck.Checked,
+                bonusAlways = BonusAlwaysCheck.Checked,
                 fromChecked = FromCheck.Checked,
                 toChecked = ToCheck.Checked,
                 fromN = (int)FromNum.Value,
@@ -228,7 +238,8 @@ namespace NovelpiaDownloader
                     existing.fromChecked == job.fromChecked && existing.toChecked == job.toChecked &&
                     existing.fromN == job.fromN && existing.toN == job.toN &&
                     existing.saveAsEpub == job.saveAsEpub &&
-                    existing.vertical == job.vertical && existing.gothic == job.gothic)
+                    existing.vertical == job.vertical && existing.gothic == job.gothic &&
+                    existing.bonusNever == job.bonusNever && existing.bonusAlways == job.bonusAlways)
                 {
                     Log(Lang.T("queue_dup", FormatJobLabel(job)));
                     return;
@@ -348,6 +359,8 @@ namespace NovelpiaDownloader
             bool downloadImage = job.downloadImage;
             bool vertical = job.vertical;
             bool gothic = job.gothic;
+            bool bonusNever = job.bonusNever;
+            bool bonusAlways = job.bonusAlways;
             int retry = job.retry;
             string path = job.targetPath;
             Log(Lang.T("sep") + Lang.T("download_start"));
@@ -389,7 +402,7 @@ namespace NovelpiaDownloader
                                 string encodedName = HttpUtility.HtmlEncode($"[{Lang.T("notice")}] {chapterName}");
                                 threads.Add(new Thread(() =>
                                 {
-                                    DownloadChapter(capturedId, capturedName, capturedPath, true, 0);
+                                    DownloadChapter(capturedId, capturedName, capturedPath, "");
                                     if (saveAsEpub && File.Exists(capturedPath))
                                     {
                                         string html = BuildChapterHtml(encodedName, capturedPath, keepHtml, removeBlank, downloadImage, images);
@@ -403,6 +416,8 @@ namespace NovelpiaDownloader
                         }
                     }
                     bool get_content = true;
+                    int bonusNo = 1;
+                    int maxEp = 0;
                     Log(Lang.T("fetching_chapters") + "\r\n");
                     int chaptersFoundLogStart = -1;
                     if (InvokeRequired)
@@ -414,31 +429,64 @@ namespace NovelpiaDownloader
                         if (_cancelRequested) break;
                         string data = $"novel_no={novelNo}&sort=DOWN&page={page}";
                         string resp = PostRequest("https://novelpia.com/proc/episode_list", novelpia.loginkey, data, "https://novelpia.com/");
-                        var chapters = Regex.Matches(resp, @"id=""bookmark_(\d+)""></i>(.+?)</b>.+?>EP\.(\d+)<", RegexOptions.Singleline);
+                        var chapters = Regex.Matches(resp, @"id=""bookmark_(\d+)""></i>(.+?)</b>.+?>(EP\.(\d+)|BONUS)<", RegexOptions.Singleline);
                         if (chapters.Count == 0)
                             break;
                         if (seenChapterIds.Contains(chapters[0].Groups[1].Value))
                             break;
                         foreach (Match chapter in chapters)
                         {
-                            int chapterNo = int.Parse(chapter.Groups[3].Value);
+                            string kind = chapter.Groups[3].Value;
+                            bool isBonus = kind == "BONUS";
                             string chapterId = chapter.Groups[1].Value;
                             if (!seenChapterIds.Add(chapterId))
                                 continue;
-                            if (chapterNo < from)
-                                continue;
-                            if (chapterNo > to)
+                            string jsonPath;
+                            string label;
+                            if (isBonus)
                             {
-                                get_content = false;
-                                break;
+                                // BONUS chapters have no EP number; index them sequentially
+                                // after the last real EP so a bounded "to EP" can reach them.
+                                int bonusIdx = bonusNo++;
+                                if (bonusNever)
+                                    continue;
+                                if (!bonusAlways)
+                                {
+                                    int virtualNo = maxEp + bonusIdx;
+                                    if (virtualNo < from)
+                                        continue;
+                                    if (virtualNo > to)
+                                    {
+                                        get_content = false;
+                                        break;
+                                    }
+                                }
+                                jsonPath = Path.Combine(directory, $"bonus_{bonusIdx.ToString().PadLeft(4, '0')}.json");
+                                label = "BONUS";
+                            }
+                            else
+                            {
+                                int chapterNo = int.Parse(chapter.Groups[4].Value);
+                                if (chapterNo > maxEp) maxEp = chapterNo;
+                                if (chapterNo < from)
+                                    continue;
+                                if (chapterNo > to)
+                                {
+                                    // When "always BONUS" is on, keep paginating past the
+                                    // EP cap so the trailing BONUS chapters are still fetched.
+                                    if (bonusAlways)
+                                        continue;
+                                    get_content = false;
+                                    break;
+                                }
+                                jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
+                                label = $"EP.{chapterNo:D4}";
                             }
                             string chapterName = chapter.Groups[2].Value;
-                            string jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
-                            int capturedNo = chapterNo;
                             string encodedName = HttpUtility.HtmlEncode(chapterName);
                             threads.Add(new Thread(() =>
                             {
-                                DownloadChapter(chapterId, chapterName, jsonPath, false, capturedNo);
+                                DownloadChapter(chapterId, chapterName, jsonPath, label);
                                 if (saveAsEpub && File.Exists(jsonPath))
                                 {
                                     string html = BuildChapterHtml(encodedName, jsonPath, keepHtml, removeBlank, downloadImage, images);
@@ -696,9 +744,10 @@ namespace NovelpiaDownloader
             public IEnumerable<int> Keys => _paths.Keys;
         }
 
-        private void DownloadChapter(string chapterId, string chapterName, string jsonPath, bool isNotice, int epNo)
+        private void DownloadChapter(string chapterId, string chapterName, string jsonPath, string label)
         {
             if (_cancelRequested || _hadFatalError) { Interlocked.Increment(ref _progress_skip); return; }
+            string prefix = string.IsNullOrEmpty(label) ? "" : label + " ";
             int retry = _retryCount;
             for (int attempt = 0; attempt <= retry; attempt++)
             {
@@ -710,7 +759,7 @@ namespace NovelpiaDownloader
                     using (var file = new StreamWriter(jsonPath, false))
                         file.Write(resp);
                     Interlocked.Increment(ref _progress_done);
-                    InsertLineAboveProgress(isNotice ? $"  ✓ {chapterName}" : $"  ✓ EP.{epNo:D4} {chapterName}");
+                    InsertLineAboveProgress($"  ✓ {prefix}{chapterName}");
                     UpdateProgressThrottled();
                     return;
                 }
@@ -721,7 +770,7 @@ namespace NovelpiaDownloader
                     else
                     {
                         Interlocked.Increment(ref _progress_fail);
-                        InsertLineAboveProgress(isNotice ? $"  ✗ {chapterName}" : $"  ✗ EP.{epNo:D4} {chapterName}");
+                        InsertLineAboveProgress($"  ✗ {prefix}{chapterName}");
                         UpdateProgressThrottled(force: true);
                         if (_stopOnError) _hadFatalError = true;
                     }
@@ -1142,7 +1191,9 @@ namespace NovelpiaDownloader
                 { "include_novel_no", IncludeNovelNoCheck.Checked },
                 { "include_chapter_range", IncludeChapterRangeCheck.Checked },
                 { "vertical", VerticalCheck.Checked },
-                { "gothic", GothicCheck.Checked }
+                { "gothic", GothicCheck.Checked },
+                { "bonus_never", BonusNeverCheck.Checked },
+                { "bonus_always", BonusAlwaysCheck.Checked }
             };
             using (StreamWriter sw = new StreamWriter("config.json"))
             {
