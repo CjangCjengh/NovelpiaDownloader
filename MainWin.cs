@@ -416,8 +416,13 @@ namespace NovelpiaDownloader
                         }
                     }
                     bool get_content = true;
-                    int bonusNo = 1;
-                    int maxEp = 0;
+                    // Two passes: first paginate to collect every chapter's metadata
+                    // (and the final EP number), then filter and queue downloads. Only a
+                    // BONUS that sits after the last real EP gets a virtual "post-final-EP"
+                    // number; a mid-story BONUS rides on the preceding EP's range membership
+                    // and does not consume an EP slot.
+                    var allChapters = new List<(string kind, string chapterId, string chapterName, int epNo)>();
+                    int maxEpFinal = 0;
                     Log(Lang.T("fetching_chapters") + "\r\n");
                     int chaptersFoundLogStart = -1;
                     if (InvokeRequired)
@@ -441,63 +446,20 @@ namespace NovelpiaDownloader
                             string chapterId = chapter.Groups[1].Value;
                             if (!seenChapterIds.Add(chapterId))
                                 continue;
-                            string jsonPath;
-                            string label;
-                            if (isBonus)
+                            int epNo = isBonus ? 0 : int.Parse(chapter.Groups[4].Value);
+                            if (!isBonus && epNo > maxEpFinal)
+                                maxEpFinal = epNo;
+                            allChapters.Add((kind, chapterId, chapter.Groups[2].Value, epNo));
+                            // Stop paginating once we pass the EP cap, unless "always
+                            // include BONUS" still needs to sweep the trailing BONUS.
+                            if (!isBonus && epNo > to && !bonusAlways)
                             {
-                                // BONUS chapters have no EP number; index them sequentially
-                                // after the last real EP so a bounded "to EP" can reach them.
-                                int bonusIdx = bonusNo++;
-                                if (bonusNever)
-                                    continue;
-                                if (!bonusAlways)
-                                {
-                                    int virtualNo = maxEp + bonusIdx;
-                                    if (virtualNo < from)
-                                        continue;
-                                    if (virtualNo > to)
-                                    {
-                                        get_content = false;
-                                        break;
-                                    }
-                                }
-                                jsonPath = Path.Combine(directory, $"bonus_{bonusIdx.ToString().PadLeft(4, '0')}.json");
-                                label = "BONUS";
+                                get_content = false;
+                                break;
                             }
-                            else
-                            {
-                                int chapterNo = int.Parse(chapter.Groups[4].Value);
-                                if (chapterNo > maxEp) maxEp = chapterNo;
-                                if (chapterNo < from)
-                                    continue;
-                                if (chapterNo > to)
-                                {
-                                    // When "always BONUS" is on, keep paginating past the
-                                    // EP cap so the trailing BONUS chapters are still fetched.
-                                    if (bonusAlways)
-                                        continue;
-                                    get_content = false;
-                                    break;
-                                }
-                                jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
-                                label = $"EP.{chapterNo:D4}";
-                            }
-                            string chapterName = chapter.Groups[2].Value;
-                            string encodedName = HttpUtility.HtmlEncode(chapterName);
-                            threads.Add(new Thread(() =>
-                            {
-                                DownloadChapter(chapterId, chapterName, jsonPath, label);
-                                if (saveAsEpub && File.Exists(jsonPath))
-                                {
-                                    string html = BuildChapterHtml(encodedName, jsonPath, keepHtml, removeBlank, downloadImage, images);
-                                    if (html != null)
-                                        chapterHtmls[jsonPath] = html;
-                                }
-                            }));
-                            chapterNames.Add((encodedName, jsonPath));
                         }
                         // refresh "chapter list progress" line
-                        int foundCnt = chapterNames.Count;
+                        int foundCnt = allChapters.Count;
                         int capturedStart = chaptersFoundLogStart;
                         BeginInvoke(new Action(() =>
                         {
@@ -507,16 +469,83 @@ namespace NovelpiaDownloader
                             ConsoleBox.SelectionStart = ConsoleBox.TextLength;
                             ConsoleBox.ScrollToCaret();
                         }));
+                        if (!get_content)
+                            break;
                         page++;
                     }
                     // finalize chapter list line
                     {
-                        int foundCnt = chapterNames.Count;
+                        int foundCnt = allChapters.Count;
                         int capturedStart = chaptersFoundLogStart;
                         if (InvokeRequired)
                             Invoke(new Action(() => { int len = ConsoleBox.TextLength - capturedStart; ConsoleBox.Select(capturedStart, len); ConsoleBox.SelectedText = Lang.T("chapter_list_done", foundCnt) + "\r\n"; ConsoleBox.SelectionStart = ConsoleBox.TextLength; ConsoleBox.ScrollToCaret(); }));
                         else
                         { int len = ConsoleBox.TextLength - capturedStart; ConsoleBox.Select(capturedStart, len); ConsoleBox.SelectedText = Lang.T("chapter_list_done", foundCnt) + "\r\n"; ConsoleBox.SelectionStart = ConsoleBox.TextLength; ConsoleBox.ScrollToCaret(); }
+                    }
+                    // Second pass: apply from/to filtering and queue download threads.
+                    int bonusIdx = 0;
+                    int bonusTailIdx = 0;
+                    int runningMaxEp = 0;
+                    int lastEpNo = 0;
+                    foreach (var ch in allChapters)
+                    {
+                        bool isBonus = ch.kind == "BONUS";
+                        string jsonPath;
+                        string label;
+                        if (isBonus)
+                        {
+                            bonusIdx++;
+                            if (bonusNever)
+                                continue;
+                            if (!bonusAlways)
+                            {
+                                bool isTail = maxEpFinal > 0 && runningMaxEp >= maxEpFinal;
+                                if (isTail)
+                                {
+                                    // Trailing BONUS: number past the final EP so a bounded
+                                    // "to EP" can reach it.
+                                    int virtualNo = maxEpFinal + (++bonusTailIdx);
+                                    if (virtualNo < from)
+                                        continue;
+                                    if (virtualNo > to)
+                                        break;
+                                }
+                                else
+                                {
+                                    // Mid-story BONUS: rides on the preceding EP's range
+                                    // membership; does not consume an EP number.
+                                    if (lastEpNo < from || lastEpNo > to)
+                                        continue;
+                                }
+                            }
+                            jsonPath = Path.Combine(directory, $"bonus_{bonusIdx.ToString().PadLeft(4, '0')}.json");
+                            label = "BONUS";
+                        }
+                        else
+                        {
+                            int chapterNo = ch.epNo;
+                            if (chapterNo > runningMaxEp)
+                                runningMaxEp = chapterNo;
+                            lastEpNo = chapterNo;
+                            if (chapterNo < from)
+                                continue;
+                            if (chapterNo > to)
+                                continue;
+                            jsonPath = Path.Combine(directory, $"{chapterNo.ToString().PadLeft(4, '0')}.json");
+                            label = $"EP.{chapterNo:D4}";
+                        }
+                        string encodedName = HttpUtility.HtmlEncode(ch.chapterName);
+                        threads.Add(new Thread(() =>
+                        {
+                            DownloadChapter(ch.chapterId, ch.chapterName, jsonPath, label);
+                            if (saveAsEpub && File.Exists(jsonPath))
+                            {
+                                string html = BuildChapterHtml(encodedName, jsonPath, keepHtml, removeBlank, downloadImage, images);
+                                if (html != null)
+                                    chapterHtmls[jsonPath] = html;
+                            }
+                        }));
+                        chapterNames.Add((encodedName, jsonPath));
                     }
 
                     string title = null, author = null, titleEnc = null, authorEnc = null, cover_url = null, coverPath = null;
@@ -681,10 +710,10 @@ namespace NovelpiaDownloader
                                 file.Write($"{HttpUtility.HtmlDecode(s.Item1)}\n\n");
                                 if (!File.Exists(s.Item2))
                                     return;
-                                var pendingTags = new List<string>();
                                 using (var reader = new StreamReader(s.Item2, Encoding.UTF8))
                                 {
                                     var texts = serializer.Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
+                                    var carry = new List<string>();
                                     foreach (var text in (ArrayList)texts["s"])
                                     {
                                         var textDict = (Dictionary<string, object>)text;
@@ -693,7 +722,7 @@ namespace NovelpiaDownloader
                                             continue;
                                         if (!keepHtml)
                                             textStr = Regex.Replace(textStr, @"<img.+?>", "");
-                                        textStr = CleanText(textStr, keepHtml, pendingTags);
+                                        textStr = CleanText(textStr, keepHtml, ref carry);
                                         if (textStr == "")
                                         {
                                             if (!removeBlank)
@@ -778,7 +807,7 @@ namespace NovelpiaDownloader
             }
         }
 
-        private string CleanText(string textStr, bool keepHtml, List<string> pendingTags)
+        private string CleanText(string textStr, bool keepHtml, ref List<string> carry)
         {
             textStr = Regex.Replace(textStr, @"<p style='height: 0px; width: 0px;.+?>.*?</p>", "");
             if (!keepHtml)
@@ -787,10 +816,17 @@ namespace NovelpiaDownloader
             }
             else
             {
+                // Preserve cross-segment styling while keeping each <p>...</p> valid XHTML.
+                // Novelpia splits a single styled span across segments: a bare "<b><i>"
+                // line, then a plain-text line, then "</i></b>". So we reopen the tags
+                // still open from the previous segment (carry) at the start of this one,
+                // close everything again before </p>, and forward the still-open set as
+                // the next segment's carry. Each <p> stays self-balanced; the bold/italic
+                // span is retained on every line it covers.
                 var sb = new StringBuilder();
-                foreach (var tag in pendingTags)
-                    sb.Append('<').Append(tag).Append('>');
-                var stack = new List<string>(pendingTags);
+                var stack = new List<string>(carry);
+                foreach (string open in carry)
+                    sb.Append('<').Append(open).Append('>');
                 int pos = 0;
                 var tagMatches = Regex.Matches(textStr, @"<(/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>");
                 foreach (Match m in tagMatches)
@@ -805,10 +841,15 @@ namespace NovelpiaDownloader
                     }
                     else if (isClose)
                     {
-                        if (stack.Count > 0 && stack[stack.Count - 1].StartsWith(tagName))
+                        // Pop the nearest matching open, closing any nested tags first.
+                        int idx = -1;
+                        for (int k = stack.Count - 1; k >= 0; k--)
+                            if (TagNameOf(stack[k]) == tagName) { idx = k; break; }
+                        if (idx >= 0)
                         {
-                            stack.RemoveAt(stack.Count - 1);
-                            sb.Append(m.Value);
+                            for (int k = stack.Count - 1; k >= idx; k--)
+                                sb.Append("</").Append(TagNameOf(stack[k])).Append('>');
+                            stack.RemoveRange(idx, stack.Count - idx);
                         }
                     }
                     else
@@ -819,18 +860,18 @@ namespace NovelpiaDownloader
                     pos = m.Index + m.Length;
                 }
                 sb.Append(textStr.Substring(pos));
-                for (int k = stack.Count - 1; k >= pendingTags.Count; k--)
-                {
-                    string fullOpen = stack[k];
-                    int sp = fullOpen.IndexOf(' ');
-                    string tn = sp > 0 ? fullOpen.Substring(0, sp) : fullOpen;
-                    sb.Append("</").Append(tn).Append('>');
-                }
-                pendingTags.Clear();
-                pendingTags.AddRange(stack);
+                for (int k = stack.Count - 1; k >= 0; k--)
+                    sb.Append("</").Append(TagNameOf(stack[k])).Append('>');
+                carry = stack;
                 textStr = sb.ToString();
             }
             return textStr.Replace("\n", "").Replace("\r", "");
+        }
+
+        private static string TagNameOf(string fullOpen)
+        {
+            int sp = fullOpen.IndexOf(' ');
+            return sp > 0 ? fullOpen.Substring(0, sp) : fullOpen;
         }
 
         private string BuildChapterHtml(string encodedName, string jsonPath, bool keepHtml, bool removeBlank, bool downloadImage, ImageContext images)
@@ -840,11 +881,11 @@ namespace NovelpiaDownloader
                 var sb = new StringBuilder();
                 sb.Append(EpubTemplate.chapter);
                 sb.Append("<h1>").Append(encodedName).Append("</h1>\n<p>&nbsp;</p>\n");
-                var pendingTags = new List<string>();
                 var serializer = new JavaScriptSerializer();
                 using (var reader = new StreamReader(jsonPath, Encoding.UTF8))
                 {
                     var texts = serializer.Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
+                    var carry = new List<string>();
                     foreach (var text in (ArrayList)texts["s"])
                     {
                         var textDict = (Dictionary<string, object>)text;
@@ -873,7 +914,7 @@ namespace NovelpiaDownloader
                             }
                             continue;
                         }
-                        textStr = CleanText(textStr, keepHtml, pendingTags);
+                        textStr = CleanText(textStr, keepHtml, ref carry);
                         if (textStr == "")
                         {
                             if (!removeBlank)

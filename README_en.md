@@ -18,7 +18,7 @@ Get `NovelpiaDownloader.exe` from the [Releases](https://github.com/CjangCjengh/
 4. Adjust **threads / interval (s) / retry** as needed.
 5. In the left **Download** group set:
    - **Novel number**: enter a Novelpia novel URL or novel number.
-   - **From Ep. / To Ep.**: check to set a range; leave unchecked for all episodes. BONUS episodes after the final EP are counted as the next numbers after the last EP, so they fall within the **To Ep.** range. Example: last EP is 100, **To Ep.** 101 → 1 BONUS, 102 → 2 BONUS.
+   - **From Ep. / To Ep.**: check to set a range; leave unchecked for all episodes. BONUS episodes after the final EP are counted as the next numbers after the last EP, so they fall within the range. BONUS episodes inserted mid-story follow the preceding EP's range but do not consume an EP number. Example: last EP is 100, 101 → 1 trailing BONUS, 102 → 2.
    - **Exclude BONUS / Always include BONUS**: force BONUS behavior. **Exclude** never downloads BONUS regardless of range; **Always include** downloads every BONUS regardless of range. Leave both unchecked to follow the range rule above.
    - **Save to**: output folder.
    - **Format**: EPUB / TXT.
